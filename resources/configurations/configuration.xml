@@ -1,0 +1,151 @@
+<?xml version="1.0"?>
+<config>
+
+	<!-- define the tabPanes for the kepler interface -->
+	<tabPaneFactory>
+		<tabPane>
+			<name>Components</name>
+			<class>org.kepler.gui.ComponentLibraryTab$Factory</class>
+		</tabPane>
+		<tabPane>
+			<name>Data</name>
+			<class>org.ecoinformatics.seek.ecogrid.quicksearch.DatasetPanel$Factory
+			</class>
+		</tabPane>
+		<tabPane>
+			<name>Items Of Interest</name>
+			<class>org.kepler.reporting.gui.ItemsOfInterestPanel$Factory</class>
+		</tabPane>
+		<tabPane>
+			<name>Report Designer</name>
+			<class>org.kepler.reporting.gui.ReportDesignerPanel$Factory</class>
+		</tabPane>
+		<tabPane>
+			<name>Report Viewer</name>
+			<class>org.kepler.reporting.gui.ReportViewerPanel$Factory</class>
+		</tabPane>
+		<tabPane>
+			<name>Properties</name>
+			<class>org.kepler.reporting.gui.PropertiesPanel$Factory</class>
+		</tabPane>
+		<tabPane>
+			<name>Workflow Run Manager</name>
+			<class>org.kepler.workflowrunmanager.gui.WorkflowRunManagerPanel$Factory
+			</class>
+		</tabPane>
+		<tabPane>
+			<name>Diagnosis TabPane Test</name>
+			<class>org.kepler.diagnosis.gui.DiagnosisTabPaneTestPanel$Factory
+			</class>
+		</tabPane>
+		<tabPane>
+			<name>Outline</name>
+			<class>org.kepler.gui.WorkflowOutlineTabPane$Factory</class>
+		</tabPane>
+	</tabPaneFactory>
+
+	<!-- define the viewPane factories to use -->
+	<viewPaneFactory>
+		<viewPane>
+			<name>Workflow</name>
+			<class>org.kepler.gui.DualVerticalViewPane$Factory</class>
+		</viewPane>
+		<viewPane>
+			<name>Reporting</name>
+			<class>org.kepler.gui.DefaultViewPane$Factory</class>
+		</viewPane>
+		<viewPane>
+			<name>Diagnosis</name>
+			<class>org.kepler.gui.DefaultViewPane$Factory</class>
+		</viewPane>
+	</viewPaneFactory>
+
+	<!--
+		Here is where the location of TabPanes within ViewPanes is defined.
+		The TabPanes listed here need to be configured in the tabPaneFactory
+		element of the configuration.xml file. The ViewPanes listed here need
+		to be configured in the viewPaneFactory element of the
+		configuration.xml file.
+	-->
+	<viewPaneTabPanes>
+		<viewPane>
+			<name>Workflow</name>
+			<viewPaneLocation>
+				<name>W</name>
+				<tabPane>
+					<name>Components</name>
+				</tabPane>
+				<tabPane>
+					<name>Data</name>
+				</tabPane>
+				<tabPane>
+					<name>Outline</name>
+				</tabPane>
+			</viewPaneLocation>
+			<viewPaneLocation>
+				<name>E</name>
+			</viewPaneLocation>
+		</viewPane>
+		<viewPane>
+			<!-- if you change the viewPane name of Report Designer also change reportDesignerName-->
+			<name>Reporting</name>
+			<viewPaneLocation>
+				<name>NW</name>
+				<tabPane>
+					<name>Items Of Interest</name>
+				</tabPane>
+			</viewPaneLocation>
+			<viewPaneLocation>
+				<name>NE</name>
+				<tabPane>
+					<name>Report Designer</name>
+				</tabPane>
+				<tabPane>
+					<name>Report Viewer</name>
+				</tabPane>
+			</viewPaneLocation>
+			<viewPaneLocation>
+				<name>SE</name>
+				<tabPane>
+					<name>Workflow Run Manager</name>
+				</tabPane>
+			</viewPaneLocation>
+			<viewPaneLocation>
+				<name>SW</name>
+				<tabPane>
+					<name>Properties</name>
+				</tabPane>
+			</viewPaneLocation>
+		</viewPane>
+		<viewPane>
+			<name>Diagnosis</name>
+			<viewPaneLocation>
+				<name>NW</name>
+			</viewPaneLocation>
+			<viewPaneLocation>
+				<name>NE</name>
+				<tabPane>
+					<name>Diagnosis TabPane Test</name>
+				</tabPane>
+			</viewPaneLocation>
+			<viewPaneLocation>
+				<name>SW</name>
+			</viewPaneLocation>
+			<viewPaneLocation>
+				<name>SE</name>
+			</viewPaneLocation>
+		</viewPane>
+	</viewPaneTabPanes>
+
+	<!-- Specify where the canvas should go -->
+	<canvasViewPaneLocation>
+		<viewPane>
+			<name>Workflow</name>
+			<viewPaneLocation>
+				<name>E</name>
+			</viewPaneLocation>
+		</viewPane>
+	</canvasViewPaneLocation>
+
+
+</config>
