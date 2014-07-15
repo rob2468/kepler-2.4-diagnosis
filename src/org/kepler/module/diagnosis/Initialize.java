@@ -32,11 +32,10 @@ public class Initialize implements KeplerGraphFrameUpdater, ModuleInitializer
 		ConfigurationManager cm = ConfigurationManager.getInstance();
 		        
         ConfigurationProperty commonProperty = cm.getProperty(ConfigurationManager.getModule("common"));
-        Module dm = ConfigurationManager.getModule("diagnosis");
         ConfigurationProperty diagnosisProperty = cm.getProperty(ConfigurationManager.getModule("diagnosis"));
         ConfigurationProperty guiProperty = cm.getProperty(ConfigurationManager.getModule("gui"));
         
-        //we need to override the common tab pane properties with the ones from reporting
+        //we need to override the common tab pane properties with the ones from diagnosis
         ConfigurationProperty commonViewPaneTabPanesProp = commonProperty.getProperty("viewPaneTabPanes");
         ConfigurationProperty diagnosisViewPaneTabPanesProp = diagnosisProperty.getProperty("viewPaneTabPanes");
         commonProperty.overrideProperty(commonViewPaneTabPanesProp, diagnosisViewPaneTabPanesProp, true);
@@ -61,15 +60,15 @@ public class Initialize implements KeplerGraphFrameUpdater, ModuleInitializer
 
 	public void updateFrameComponents(Components components)
 	{
-		final NamedObj model = components.getFrame().getModel().toplevel();
-		
-		JToolBar toolbar = components.getToolBar();
-		
-		final KeplerGraphFrame frame = components.getFrame();
-		
-		ViewManager vman = ViewManager.getInstance();
-		JComponent vsel = vman.getViewSelector(frame);
-		
+//		final NamedObj model = components.getFrame().getModel().toplevel();
+//		
+//		JToolBar toolbar = components.getToolBar();
+//		
+//		final KeplerGraphFrame frame = components.getFrame();
+//		
+//		ViewManager vman = ViewManager.getInstance();
+//		JComponent vsel = vman.getViewSelector(frame);
+//		
 		
 	}
 
