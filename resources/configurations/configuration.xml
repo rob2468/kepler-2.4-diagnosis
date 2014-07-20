@@ -34,8 +34,8 @@
 			</class>
 		</tabPane>
 		<tabPane>
-			<name>Diagnosis TabPane Test</name>
-			<class>org.kepler.diagnosis.gui.DiagnosisTabPaneTestPanel$Factory
+			<name>Diagnosis Panel</name>
+			<class>org.kepler.diagnosis.gui.DiagnosisPanel$Factory
 			</class>
 		</tabPane>
 		<tabPane>
@@ -122,7 +122,7 @@
 			<viewPaneLocation>
 				<name>NE</name>
 				<tabPane>
-					<name>Diagnosis TabPane Test</name>
+					<name>Diagnosis Panel</name>
 				</tabPane>
 			</viewPaneLocation>
 			<viewPaneLocation>

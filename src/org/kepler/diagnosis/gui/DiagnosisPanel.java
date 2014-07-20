@@ -10,13 +10,13 @@ import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 import ptolemy.kernel.util.NamedObj;
 
-public class DiagnosisTabPaneTestPanel extends JPanel implements TabPane
+public class DiagnosisPanel extends JPanel implements TabPane
 {
 
 	private TableauFrame _frame;
 	private String _title;
 	
-	public DiagnosisTabPaneTestPanel(String title)
+	public DiagnosisPanel(String title)
 	{
 		_title = title;
 	}
@@ -60,7 +60,7 @@ public class DiagnosisTabPaneTestPanel extends JPanel implements TabPane
 		
 		public TabPane createTabPane(TableauFrame parent)
 		{
-			DiagnosisTabPaneTestPanel dtptp = new DiagnosisTabPaneTestPanel(this.getName());
+			DiagnosisPanel dtptp = new DiagnosisPanel(this.getName());
 			return dtptp;
 		}
 	}
