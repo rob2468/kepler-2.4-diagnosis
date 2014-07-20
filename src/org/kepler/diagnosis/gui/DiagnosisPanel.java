@@ -4,13 +4,17 @@ import javax.swing.JPanel;
 
 import org.kepler.gui.TabPane;
 import org.kepler.gui.TabPaneFactory;
+import org.kepler.gui.state.StateChangeEvent;
+import org.kepler.gui.state.StateChangeListener;
+import org.kepler.gui.state.StateChangeMonitor;
+import org.kepler.util.WorkflowRun;
 
 import ptolemy.actor.gui.TableauFrame;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 import ptolemy.kernel.util.NamedObj;
 
-public class DiagnosisPanel extends JPanel implements TabPane
+public class DiagnosisPanel extends JPanel implements TabPane, StateChangeListener
 {
 
 	private TableauFrame _frame;
@@ -24,7 +28,7 @@ public class DiagnosisPanel extends JPanel implements TabPane
 	@Override
 	public void initializeTab() throws Exception
 	{
-		// TODO Auto-generated method stub
+		StateChangeMonitor.getInstance().addStateChangeListener(WorkflowRun.WORKFLOWRUN_SELECTED, this);
 		
 	}
 
@@ -63,5 +67,13 @@ public class DiagnosisPanel extends JPanel implements TabPane
 			DiagnosisPanel dtptp = new DiagnosisPanel(this.getName());
 			return dtptp;
 		}
+	}
+
+	@Override
+	public void handleStateChange(StateChangeEvent event)
+	{
+		// TODO Auto-generated method stub
+		System.out.println("received state change event");
+		System.out.print(event);
 	}
 }
