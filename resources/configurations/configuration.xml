@@ -106,9 +106,6 @@
 			</viewPaneLocation>
 			<viewPaneLocation>
 				<name>SE</name>
-				<tabPane>
-					<name>Workflow Run Manager</name>
-				</tabPane>
 			</viewPaneLocation>
 			<viewPaneLocation>
 				<name>SW</name>
@@ -133,6 +130,9 @@
 			</viewPaneLocation>
 			<viewPaneLocation>
 				<name>SE</name>
+				<tabPane>
+					<name>Workflow Run Manager</name>
+				</tabPane>
 			</viewPaneLocation>
 		</viewPane>
 	</viewPaneTabPanes>
