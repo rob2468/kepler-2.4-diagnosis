@@ -2,18 +2,27 @@ package org.kepler.diagnosis.gui;
 
 import javax.swing.JPanel;
 
+import org.kepler.gui.KeplerGraphFrame;
 import org.kepler.gui.TabPane;
 import org.kepler.gui.TabPaneFactory;
+import org.kepler.gui.ViewManager;
 import org.kepler.gui.state.StateChangeEvent;
 import org.kepler.gui.state.StateChangeListener;
 import org.kepler.gui.state.StateChangeMonitor;
 import org.kepler.util.WorkflowRun;
 
+import ptolemy.actor.gui.Configuration;
+import ptolemy.actor.gui.ModelDirectory;
 import ptolemy.actor.gui.TableauFrame;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 import ptolemy.kernel.util.NamedObj;
+import ptolemy.moml.MoMLParser;
 
+/**
+ * This class will be instantiated by view manager. But not add to the application's frame.
+ * Used as event listener.
+ * */
 public class DiagnosisPanel extends JPanel implements TabPane, StateChangeListener
 {
 
@@ -72,8 +81,22 @@ public class DiagnosisPanel extends JPanel implements TabPane, StateChangeListen
 	@Override
 	public void handleStateChange(StateChangeEvent event)
 	{
-		// TODO Auto-generated method stub
-		System.out.println("received state change event");
-		System.out.print(event);
+		if (event.getChangedState().equals(WorkflowRun.WORKFLOWRUN_SELECTED))
+		{
+			NamedObj namedObj = event.getReference();
+			
+			DiagnosisGraphPanel.Factory factory = new DiagnosisGraphPanel.Factory();
+			DiagnosisGraphPanel canvasPanel = factory.createDiagnosisGraphPanel();
+			ViewManager viewman = ViewManager.getInstance();
+			try
+			{
+				canvasPanel.setName(namedObj.getDisplayName());
+				viewman.addDiagnosisCanvasToLocationNE(canvasPanel, _frame);
+			} catch (Exception e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 }

@@ -121,9 +121,6 @@
 			</viewPaneLocation>
 			<viewPaneLocation>
 				<name>NE</name>
-				<tabPane>
-					<name>Diagnosis Panel</name>
-				</tabPane>
 			</viewPaneLocation>
 			<viewPaneLocation>
 				<name>SW</name>
