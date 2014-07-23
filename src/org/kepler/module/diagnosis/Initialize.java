@@ -1,11 +1,13 @@
 package org.kepler.module.diagnosis;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JToolBar;
 
 import org.kepler.build.modules.Module;
 import org.kepler.configuration.ConfigurationManager;
 import org.kepler.configuration.ConfigurationProperty;
+import org.kepler.diagnosis.gui.DiagnosisAction;
 import org.kepler.gui.KeplerGraphFrame;
 import org.kepler.gui.KeplerGraphFrame.Components;
 import org.kepler.gui.KeplerGraphFrameUpdater;
@@ -60,16 +62,9 @@ public class Initialize implements KeplerGraphFrameUpdater, ModuleInitializer
 
 	public void updateFrameComponents(Components components)
 	{
-//		final NamedObj model = components.getFrame().getModel().toplevel();
-//		
-//		JToolBar toolbar = components.getToolBar();
-//		
-//		final KeplerGraphFrame frame = components.getFrame();
-//		
-//		ViewManager vman = ViewManager.getInstance();
-//		JComponent vsel = vman.getViewSelector(frame);
-//		
-		
+		DiagnosisAction action = new DiagnosisAction("diagnosis");
+		JToolBar toolbar = components.getToolBar();
+		diva.gui.GUIUtilities.addToolBarButton(toolbar, action);
 	}
 
 	public void dispose(KeplerGraphFrame frame)
