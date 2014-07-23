@@ -2,22 +2,21 @@ package org.kepler.diagnosis.gui;
 
 import javax.swing.JPanel;
 
-import org.kepler.gui.KeplerGraphFrame;
 import org.kepler.gui.TabPane;
 import org.kepler.gui.TabPaneFactory;
 import org.kepler.gui.ViewManager;
 import org.kepler.gui.state.StateChangeEvent;
 import org.kepler.gui.state.StateChangeListener;
 import org.kepler.gui.state.StateChangeMonitor;
+import org.kepler.objectmanager.lsid.KeplerLSID;
 import org.kepler.util.WorkflowRun;
+import org.kepler.workflowrunmanager.WorkflowRunManager;
+import org.kepler.workflowrunmanager.WorkflowRunManagerManager;
 
-import ptolemy.actor.gui.Configuration;
-import ptolemy.actor.gui.ModelDirectory;
 import ptolemy.actor.gui.TableauFrame;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 import ptolemy.kernel.util.NamedObj;
-import ptolemy.moml.MoMLParser;
 
 /**
  * This class will be instantiated by view manager. But not add to the application's frame.
@@ -84,13 +83,20 @@ public class DiagnosisPanel extends JPanel implements TabPane, StateChangeListen
 		if (event.getChangedState().equals(WorkflowRun.WORKFLOWRUN_SELECTED))
 		{
 			NamedObj namedObj = event.getReference();
+			WorkflowRun wfRun = (WorkflowRun) namedObj;
+			String runsModDeps = wfRun.getModuleDependencies();
+			KeplerLSID runLSID = wfRun.getExecLSID();
+			KeplerLSID workflowLSID = wfRun.getWorkflowLSID();
 			
+			WorkflowRunManagerManager wrmm = WorkflowRunManagerManager.getInstance();
+			WorkflowRunManager wrm = wrmm.getWRM(_frame);
+			NamedObj workflow = wrm.getAssociatedWorkflowForWorkflowRun(runLSID);
+				
 			DiagnosisGraphPanel.Factory factory = new DiagnosisGraphPanel.Factory();
-			DiagnosisGraphPanel canvasPanel = factory.createDiagnosisGraphPanel();
+			DiagnosisGraphPanel canvasPanel = factory.createDiagnosisGraphPanel(workflow);
 			ViewManager viewman = ViewManager.getInstance();
 			try
 			{
-				canvasPanel.setName(namedObj.getDisplayName());
 				viewman.addDiagnosisCanvasToLocationNE(canvasPanel, _frame);
 			} catch (Exception e)
 			{

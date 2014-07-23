@@ -319,14 +319,14 @@ public class ViewManager {
 
 		String viewPaneLocationName = "NE";
 		theViewPane.getLocationContainer(viewPaneLocationName).add(
-								canvas, 0);
+								canvas, -1);
 
 		// if the canvas is part of a tabbed pane, make sure it is
 		// selected
 		Component container = canvas.getParent();
 		if (container instanceof JTabbedPane)
 		{
-			((JTabbedPane) container).setSelectedIndex(0);
+			((JTabbedPane) container).setSelectedComponent(canvas);
 		}
 	}
 
