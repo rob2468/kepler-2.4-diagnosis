@@ -2,14 +2,19 @@ package org.kepler.diagnosis.gui;
 
 import java.awt.BorderLayout;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
+
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+
 import diva.graph.GraphUtilities;
 import diva.graph.JGraph;
+import ptolemy.actor.TypedIOPort;
 import ptolemy.actor.gui.Tableau;
 import ptolemy.kernel.ComponentRelation;
 import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.Location;
 import ptolemy.kernel.util.NamedObj;
 import ptolemy.vergil.actor.ActorEditorGraphController;
 import ptolemy.vergil.actor.ActorGraphModel;
@@ -40,7 +45,20 @@ public class DiagnosisGraphPanel extends JPanel
 		if (_allTablePanes == null)
 		{
 			_allTablePanes = new Vector<JComponent>();
+
+			// collect locatable nodes for actors
+			Vector<Location> locatableNodes = new Vector<Location>();
+			Iterator<?> nodesIter = GraphUtilities.nodeSet(_model.getRoot(), _model).iterator();
+			while (nodesIter.hasNext())
+			{
+				Object node = nodesIter.next();
+				if (node instanceof Location)
+				{
+					locatableNodes.addElement((Location) node);
+				}
+			}
 			
+			// collect relations according to edges(link)
 			Vector<ComponentRelation> relations = new Vector<ComponentRelation>();
 			Iterator<?> edgesIter = GraphUtilities.totallyContainedEdges(_model.getRoot(), _model);
 			while (edgesIter.hasNext())
@@ -53,6 +71,7 @@ public class DiagnosisGraphPanel extends JPanel
 				}
 			}
 			
+			// create provenance table panel for each relation
 			Iterator<ComponentRelation> relationsIter = relations.iterator();
 			while (relationsIter.hasNext())
 			{
@@ -69,13 +88,33 @@ public class DiagnosisGraphPanel extends JPanel
 				((ProvenanceTablePane) tablePane).setRelation(relation);
 				
 				int x = 0, y = 0, width = 200, height = 100;
-//				if (node instanceof Location)
-//				{
-//					double []location = ((Location)node).getLocation();
-//					x = (int)location[0];
-//					y = (int)location[1];
-//				}
-				tablePane.setBounds(x, y, width, height);
+				
+				List<?> ports = relation.linkedPortList();
+				Iterator<?> portsIter = ports.iterator();
+				int num = 0;
+				while (portsIter.hasNext())
+				{
+					TypedIOPort port = (TypedIOPort) portsIter.next();
+					NamedObj node = port.getContainer();
+					for (int i = 0; i<locatableNodes.size(); i++)
+					{
+						if (locatableNodes.elementAt(i).getContainer() == node)
+						{
+							double []location = locatableNodes.elementAt(i).getLocation();
+							x += (int) location[0];
+							y += (int) location[1];
+							num++;
+							break;
+						}
+					}
+				}
+				if (num != 0)
+				{
+					x /= num;
+					y /= num;
+				}
+				
+				tablePane.setBounds(x, y,  width, height);				
 				
 				_allTablePanes.addElement(tablePane);
 			}
