@@ -21,9 +21,11 @@ import diva.graph.JGraph;
 import diva.gui.toolbox.JCanvasPanner;
 import diva.util.java2d.ShapeUtilities;
 import ptolemy.actor.TypedIOPort;
+import ptolemy.actor.gui.SizeAttribute;
 import ptolemy.actor.gui.Tableau;
 import ptolemy.kernel.ComponentRelation;
 import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.Location;
 import ptolemy.kernel.util.NamedObj;
 import ptolemy.vergil.actor.ActorEditorGraphController;
@@ -86,7 +88,18 @@ public class DiagnosisGraphPanel extends JPanel
 		// set this graph panel
 		setBorder(null);
 		setLayout(new BorderLayout());
-					
+		
+		try
+		{
+			SizeAttribute size = (SizeAttribute) ((NamedObj) _model.getRoot()).getAttribute("_vergilSize", SizeAttribute.class);
+			if (size != null)
+				size.setSize(_jgraph);
+		} catch (IllegalActionException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// set scroll bar and add to the graph panel
 		_horizontalScrollBar = new JScrollBar(Adjustable.HORIZONTAL);
 		_verticalScrollBar = new JScrollBar(Adjustable.VERTICAL);
@@ -96,7 +109,7 @@ public class DiagnosisGraphPanel extends JPanel
 		
 		_horizontalScrollBar.setModel(_jgraph.getGraphPane().getCanvas().getHorizontalRangeModel());
 		_verticalScrollBar.setModel(_jgraph.getGraphPane().getCanvas().getVerticalRangeModel());
-		
+
 		_horizontalScrollBarListener =  new ScrollBarListener(_horizontalScrollBar);
 		_verticalScrollBarListener = new ScrollBarListener(_verticalScrollBar);
 		
@@ -238,7 +251,6 @@ public class DiagnosisGraphPanel extends JPanel
                 AffineTransform newTransform = _jgraph.getGraphPane()
                         .getCanvas().getCanvasPane().getTransformContext()
                         .getTransform();
-
                 newTransform.translate(visibleRect.getX() - newLeft.getX(), 0);
 
                 _jgraph.getGraphPane().getCanvas().getCanvasPane()
@@ -247,6 +259,19 @@ public class DiagnosisGraphPanel extends JPanel
                 if (_graphPanner != null) {
                     _graphPanner.repaint();
                 }
+                
+                Iterator<JComponent> tablePanesIte = _allTablePanes.iterator();
+				while (tablePanesIte.hasNext())
+				{
+					JComponent tablePane = tablePanesIte.next();
+					
+					double xVal = visibleRect.getX() - newLeft.getX();
+					int x = tablePane.getX();
+					int y = tablePane.getY();
+					int width = tablePane.getWidth();
+					int height = tablePane.getHeight();
+					tablePane.setBounds(x+(int)xVal, y, width, height);
+				}
 			} else
 			{
 				Rectangle2D visibleRect = getVisibleSize();
@@ -263,6 +288,19 @@ public class DiagnosisGraphPanel extends JPanel
                 if (_graphPanner != null) {
                     _graphPanner.repaint();
                 }
+                
+                Iterator<JComponent> tablePanesIte = _allTablePanes.iterator();
+				while (tablePanesIte.hasNext())
+				{
+					JComponent tablePane = tablePanesIte.next();
+					
+					double yVal = visibleRect.getY() - newTop.getY();
+					int x = tablePane.getX();
+					int y = tablePane.getY();
+					int width = tablePane.getWidth();
+					int height = tablePane.getHeight();
+					tablePane.setBounds(x, y+(int)yVal, width, height);
+				}
 			}
 		}
 		
