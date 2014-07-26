@@ -1,15 +1,25 @@
 package org.kepler.diagnosis.gui;
 
+import java.awt.Adjustable;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.AdjustmentEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 
 import diva.graph.GraphUtilities;
 import diva.graph.JGraph;
+import diva.gui.toolbox.JCanvasPanner;
+import diva.util.java2d.ShapeUtilities;
 import ptolemy.actor.TypedIOPort;
 import ptolemy.actor.gui.Tableau;
 import ptolemy.kernel.ComponentRelation;
@@ -30,13 +40,70 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	public DiagnosisGraphPanel(NamedObj workflow)
 	{
-		setModel(new ActorGraphModel(workflow));
+		// add graph model to the graph panel
+		ActorGraphModel graphModel = new ActorGraphModel(workflow);
+		setModel(graphModel);
 		
+		// add graph controller to the graph panel
+		ActorEditorGraphController graphController = new ActorEditorGraphController();
+		setController(graphController);
+		
+		// set graph pane of _jgraph
+		BasicGraphPane graphPane = new BasicGraphPane(getController(), getModel(), workflow);
+		_jgraph = new JGraph(graphPane);
+		
+		_graphPanner = new JCanvasPanner(_jgraph);
 	}
 	
 	public DiagnosisGraphPanel(CompositeEntity entity, Tableau tableau)
 	{
 		
+	}
+	
+	/**
+     * Return the size of the visible part of the canvas, in canvas coordinates.
+     * 
+     * @return Rectangle2D
+     */
+    public Rectangle2D getVisibleSize() {
+        AffineTransform current = _jgraph.getGraphPane().getCanvas()
+                .getCanvasPane().getTransformContext().getTransform();
+        AffineTransform inverse;
+        try {
+            inverse = current.createInverse();
+        } catch (NoninvertibleTransformException e) {
+            throw new RuntimeException(e.toString());
+        }
+        Dimension size = _jgraph.getGraphPane().getCanvas().getSize();
+        Rectangle2D visibleRect = new Rectangle2D.Double(0, 0, size.getWidth(),
+                size.getHeight());
+        return ShapeUtilities.transformBounds(visibleRect, inverse);
+    }
+    
+	// initial this graph panel according to variables set in the ctor
+	public void initDiagnosisGraphPanel()
+	{
+		// set this graph panel
+		setBorder(null);
+		setLayout(new BorderLayout());
+					
+		// set scroll bar and add to the graph panel
+		_horizontalScrollBar = new JScrollBar(Adjustable.HORIZONTAL);
+		_verticalScrollBar = new JScrollBar(Adjustable.VERTICAL);
+					
+		add(_horizontalScrollBar, BorderLayout.SOUTH);
+		add(_verticalScrollBar, BorderLayout.EAST);
+		
+		_horizontalScrollBar.setModel(_jgraph.getGraphPane().getCanvas().getHorizontalRangeModel());
+		_verticalScrollBar.setModel(_jgraph.getGraphPane().getCanvas().getVerticalRangeModel());
+		
+		_horizontalScrollBarListener =  new ScrollBarListener(_horizontalScrollBar);
+		_verticalScrollBarListener = new ScrollBarListener(_verticalScrollBar);
+		
+		_horizontalScrollBar.addAdjustmentListener(_horizontalScrollBarListener);
+		_verticalScrollBar.addAdjustmentListener(_verticalScrollBarListener);
+		
+		add(_jgraph, BorderLayout.CENTER);
 	}
 	
 	/** Create all table panes on the basis of _model and store in _allTablePanes */
@@ -125,20 +192,9 @@ public class DiagnosisGraphPanel extends JPanel
 	{
 		public DiagnosisGraphPanel createDiagnosisGraphPanel(NamedObj workflow)
 		{
-			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel();
+			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow);
 			
-			ActorGraphModel graphModel = new ActorGraphModel(workflow);
-			canvasPanel.setModel(graphModel);
-			
-			ActorEditorGraphController graphController = new ActorEditorGraphController();
-			canvasPanel.setController(graphController);
-			
-			BasicGraphPane graphPane = new BasicGraphPane(canvasPanel.getController(), canvasPanel.getModel(), workflow);
-			canvasPanel._jgraph = new JGraph(graphPane);
-						
-			canvasPanel.setBorder(null);
-			canvasPanel.setLayout(new BorderLayout());
-			canvasPanel.add(canvasPanel._jgraph, BorderLayout.CENTER);
+			canvasPanel.initDiagnosisGraphPanel();
 			
 			canvasPanel.createAllTablePanes();
 			Iterator<JComponent> tablePanesIte = canvasPanel._allTablePanes.iterator();
@@ -153,6 +209,66 @@ public class DiagnosisGraphPanel extends JPanel
 		
 	}
 	
+	/**
+     * Listener for scrollbar events.
+     */
+    public class ScrollBarListener implements java.awt.event.AdjustmentListener
+    {
+    	
+    	public ScrollBarListener(JScrollBar sb)
+    	{
+             if (sb.getOrientation() == Adjustable.HORIZONTAL)
+             {
+                 orientation = "h";
+             } else
+             {
+                 orientation = "v";
+             }
+         }
+    	 
+		@Override
+		public void adjustmentValueChanged(AdjustmentEvent e)
+		{
+			int val = e.getValue();
+			
+			if (orientation.equals("h"))
+			{
+				Rectangle2D visibleRect = getVisibleSize();
+                Point2D newLeft = new Point2D.Double(val, 0);
+                AffineTransform newTransform = _jgraph.getGraphPane()
+                        .getCanvas().getCanvasPane().getTransformContext()
+                        .getTransform();
+
+                newTransform.translate(visibleRect.getX() - newLeft.getX(), 0);
+
+                _jgraph.getGraphPane().getCanvas().getCanvasPane()
+                        .setTransform(newTransform);
+
+                if (_graphPanner != null) {
+                    _graphPanner.repaint();
+                }
+			} else
+			{
+				Rectangle2D visibleRect = getVisibleSize();
+                Point2D newTop = new Point2D.Double(0, val);
+                AffineTransform newTransform = _jgraph.getGraphPane()
+                        .getCanvas().getCanvasPane().getTransformContext()
+                        .getTransform();
+
+                newTransform.translate(0, visibleRect.getY() - newTop.getY());
+
+                _jgraph.getGraphPane().getCanvas().getCanvasPane()
+                        .setTransform(newTransform);
+
+                if (_graphPanner != null) {
+                    _graphPanner.repaint();
+                }
+			}
+		}
+		
+		private String orientation = "";
+    }
+    
 	public JGraph getGraph()
 	{
 		return _jgraph;
@@ -190,6 +306,15 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	private ActorEditorGraphController _controller;
 	
+	private JCanvasPanner _graphPanner;
+	
 	/** All table panes that used to display provenance data */
 	private Vector<JComponent> _allTablePanes;
+	
+	private JScrollBar _horizontalScrollBar;
+	private ScrollBarListener _horizontalScrollBarListener;
+	
+	private JScrollBar _verticalScrollBar;
+	private ScrollBarListener _verticalScrollBarListener;
+	
 }
