@@ -1,12 +1,11 @@
 package org.kepler.diagnosis.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.table.TableModel;
 
 import ptolemy.kernel.ComponentRelation;
 
@@ -17,19 +16,29 @@ import ptolemy.kernel.ComponentRelation;
  * */
 public class ProvenanceTablePane extends JPanel
 {
+	public ProvenanceTablePane()
+	{
+		_tablePane = new JTable();
+	}
+	
 	public ProvenanceTablePane(Object[][] rowData,Object[] columnNames)
 	{
 		_tablePane = new JTable(rowData, columnNames);
 	}
 	
+	public void setTablePaneModel(TableModel dataModel)
+	{
+		_tablePane.setModel(dataModel);
+	}
+	
 	public static class Factory
 	{
-		public JComponent createProvenanceTablePane(Object[][] rowData,Object[] columnNames)
+		public JComponent createProvenanceTablePane()
 		{
-			ProvenanceTablePane provTablePane = new ProvenanceTablePane(rowData, columnNames);
+			ProvenanceTablePane provTablePane = new ProvenanceTablePane();
 			provTablePane.setLayout(new BorderLayout());
 			
-			provTablePane.getTablePane().setPreferredScrollableViewportSize(new Dimension(200, 100));
+//			provTablePane.getTablePane().setPreferredScrollableViewportSize(new Dimension(200, 100));
 			
 			JScrollPane scrollPane = new JScrollPane(provTablePane.getTablePane());
 			provTablePane.add(scrollPane, BorderLayout.CENTER);

@@ -1,9 +1,9 @@
 package org.kepler.diagnosis;
 
 import org.kepler.configuration.ConfigurationUtilities;
+import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
 import org.kepler.provenance.QueryException;
 import org.kepler.provenance.Queryable;
-import org.kepler.provenance.sql.SQLQueryV8;
 import org.kepler.util.ProvenanceStore;
 
 import ptolemy.kernel.util.IllegalActionException;
@@ -28,7 +28,7 @@ public final class DiagnosisManager
 	}
 	
 	/**
-	 * connect to provenance store via setting queryable to new SQLQueryV8
+	 * connect to provenance store via setting queryable to new DiagnosisSQLQuery
 	 */
 	public void connect()
 	{
@@ -36,7 +36,7 @@ public final class DiagnosisManager
 		{
 			try
 			{
-				_queryable = new SQLQueryV8(ConfigurationUtilities.getPairsMap(
+				_queryable = new DiagnosisSQLQuery(ConfigurationUtilities.getPairsMap(
 						_provenanceStore.getProvenanceConfigurationProperty()));
 				_connected = true;
 			} catch (QueryException e)

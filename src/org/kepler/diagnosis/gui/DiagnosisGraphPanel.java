@@ -15,10 +15,13 @@ import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.table.DefaultTableModel;
 
 import org.kepler.diagnosis.DiagnosisManager;
+import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
+import org.kepler.objectmanager.lsid.KeplerLSID;
 import org.kepler.provenance.QueryException;
-import org.kepler.provenance.Queryable;
+import org.kepler.util.WorkflowRun;
 
 import diva.graph.GraphUtilities;
 import diva.graph.JGraph;
@@ -44,7 +47,7 @@ public class DiagnosisGraphPanel extends JPanel
 {
 	public DiagnosisGraphPanel() {}
 	
-	public DiagnosisGraphPanel(NamedObj workflow, int runID)
+	public DiagnosisGraphPanel(NamedObj workflow)
 	{
 		// add graph model to the graph panel
 		ActorGraphModel graphModel = new ActorGraphModel(workflow);
@@ -57,9 +60,7 @@ public class DiagnosisGraphPanel extends JPanel
 		// set graph pane of _jgraph
 		BasicGraphPane graphPane = new BasicGraphPane(getController(), getModel(), workflow);
 		_jgraph = new JGraph(graphPane);
-		
-		_runID = runID;
-		
+				
 		_graphPanner = new JCanvasPanner(_jgraph);
 	}
 	
@@ -158,16 +159,7 @@ public class DiagnosisGraphPanel extends JPanel
 			}
 			
 			// prepare provenance data
-			Queryable query = DiagnosisManager.getInstance().getQueryable();
-			try
-			{
-				List<Integer> ids = query.getTokensForExecution(_runID, true);
-				System.out.println(ids);
-			} catch (QueryException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
 			
 			// create provenance table panel for each relation
 			Iterator<ComponentRelation> relationsIter = relations.iterator();
@@ -175,21 +167,17 @@ public class DiagnosisGraphPanel extends JPanel
 			{
 				ComponentRelation relation = relationsIter.next();
 				
-				Object[][] playerInfo={
-		                 {"fudan",new Integer(66)},
-		                {"fudan",new Integer(82)},
-				};
-				String[] Names={"name","test"};
-				
 				ProvenanceTablePane.Factory factory = new ProvenanceTablePane.Factory();
-				JComponent tablePane = factory.createProvenanceTablePane(playerInfo, Names);
-				((ProvenanceTablePane) tablePane).setRelation(relation);
+				ProvenanceTablePane tablePane = (ProvenanceTablePane) factory.createProvenanceTablePane();
+				tablePane.setRelation(relation);
 				
-				int x = 0, y = 0, width = 200, height = 100;
+				int x = 0, y = 0, width = 100, height = 100;
 				
 				List<?> ports = relation.linkedPortList();
 				Iterator<?> portsIter = ports.iterator();
 				int num = 0;
+				
+				List<Integer> tokenIDs = null;
 				while (portsIter.hasNext())
 				{
 					TypedIOPort port = (TypedIOPort) portsIter.next();
@@ -202,16 +190,60 @@ public class DiagnosisGraphPanel extends JPanel
 							x += (int) location[0];
 							y += (int) location[1];
 							num++;
+							
+							String fullPortName = port.getFullName();
+							Integer portID;
+							try
+							{
+								if (tokenIDs == null || tokenIDs.size()==0)
+								{
+									String entityName = fullPortName.substring(1);
+									int firstDot = entityName.indexOf('.');
+									entityName = entityName.substring(firstDot);
+									portID = query.getEntityId(entityName, _workflowLSID);
+									
+									tokenIDs = query.getTokensForExecution(_runID, portID, false);
+								}
+							} catch (QueryException e)
+							{
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							
 							break;
-						}
-					}
-				}
+						}// if
+					}// for
+				}// while
 				if (num != 0)
 				{
 					x /= num;
 					y /= num;
 				}
 				
+				DefaultTableModel tableModel = new DefaultTableModel();
+				String[] columnIdentifiers={"id", "data"};
+				tableModel.setColumnIdentifiers(columnIdentifiers);
+				if (tokenIDs != null)
+				{
+					for (int i=0; i<tokenIDs.size(); i++)
+					{
+						Integer tokenID = tokenIDs.get(i);
+						String tokenValue = "";
+						try
+						{
+							tokenValue = query.getTokenValue(tokenID);
+						} catch (QueryException e)
+						{
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						Vector<Object> rowData = new Vector<Object>();
+						rowData.addElement(tokenID);
+						rowData.addElement(tokenValue);
+						tableModel.addRow(rowData);
+					}
+				}
+				tablePane.setTablePaneModel(tableModel);
 				tablePane.setBounds(x, y,  width, height);				
 				
 				_allTablePanes.addElement(tablePane);
@@ -221,11 +253,27 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	public static class Factory
 	{
-		public DiagnosisGraphPanel createDiagnosisGraphPanel(NamedObj workflow, int runID)
+		public DiagnosisGraphPanel createDiagnosisGraphPanel(NamedObj workflow, WorkflowRun wfRun)
 		{
-			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow, runID);
+			int runID = wfRun.getExecId();
+			KeplerLSID workflowLSID = wfRun.getWorkflowLSID();
+			
+			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow);
 			
 			canvasPanel.initDiagnosisGraphPanel();
+			canvasPanel.setRunID(runID);
+			canvasPanel.setWorkflowLSID(workflowLSID);
+			DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
+			int workflowID;
+			try
+			{
+				workflowID = query.getWorkflowID(workflowLSID);
+				canvasPanel.setWorkflowID(workflowID);
+			} catch (QueryException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			canvasPanel.createAllTablePanes();
 			Iterator<JComponent> tablePanesIte = canvasPanel._allTablePanes.iterator();
@@ -345,6 +393,16 @@ public class DiagnosisGraphPanel extends JPanel
 		this._model = _model;
 	}
 	
+	public int getRunID()
+	{
+		return _runID;
+	}
+
+	public void setRunID(int _runID)
+	{
+		this._runID = _runID;
+	}
+
 	public ActorEditorGraphController getController()
 	{
 		return _controller;
@@ -353,6 +411,26 @@ public class DiagnosisGraphPanel extends JPanel
 	public void setController(ActorEditorGraphController _controller)
 	{
 		this._controller = _controller;
+	}
+
+	public int getWorkflowID()
+	{
+		return _workflowID;
+	}
+
+	public void setWorkflowID(int _workflowID)
+	{
+		this._workflowID = _workflowID;
+	}
+	
+	public KeplerLSID getWorkflowLSID()
+	{
+		return _workflowLSID;
+	}
+
+	public void setWorkflowLSID(KeplerLSID _workflowLSID)
+	{
+		this._workflowLSID = _workflowLSID;
 	}
 
 	/** The instance of JGraph for this editor */
@@ -364,6 +442,10 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	/** The workflow run id of this diagnosis graph panel corresponds to */
 	private int _runID;
+	
+	private int _workflowID;
+	
+	private KeplerLSID _workflowLSID;
 	
 	private JCanvasPanner _graphPanner;
 	
