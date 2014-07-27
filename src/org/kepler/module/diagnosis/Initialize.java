@@ -7,12 +7,15 @@ import javax.swing.JToolBar;
 import org.kepler.build.modules.Module;
 import org.kepler.configuration.ConfigurationManager;
 import org.kepler.configuration.ConfigurationProperty;
+import org.kepler.diagnosis.DiagnosisManager;
 import org.kepler.diagnosis.gui.DiagnosisAction;
 import org.kepler.gui.KeplerGraphFrame;
 import org.kepler.gui.KeplerGraphFrame.Components;
 import org.kepler.gui.KeplerGraphFrameUpdater;
 import org.kepler.gui.ViewManager;
 import org.kepler.module.ModuleInitializer;
+import org.kepler.util.ProvenanceStore;
+import org.kepler.workflowrunmanager.WRMDefaults;
 
 import ptolemy.kernel.util.NamedObj;
 
@@ -58,6 +61,12 @@ public class Initialize implements KeplerGraphFrameUpdater, ModuleInitializer
         
         System.out.println("common tabpane configuration overridden by diagnosis");
         
+        // connect diagnosis to default prov store
+        // use workflow run manager module's provenance default properties to set diagnosis module
+        ProvenanceStore provenanceStore = new ProvenanceStore(WRMDefaults.provenanceDefaultsProperty);
+        DiagnosisManager dm = DiagnosisManager.getInstance();
+        dm.setProvenanceStore(provenanceStore);
+        dm.connect();
 	}
 
 	public void updateFrameComponents(Components components)

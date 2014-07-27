@@ -16,6 +16,10 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 
+import org.kepler.diagnosis.DiagnosisManager;
+import org.kepler.provenance.QueryException;
+import org.kepler.provenance.Queryable;
+
 import diva.graph.GraphUtilities;
 import diva.graph.JGraph;
 import diva.gui.toolbox.JCanvasPanner;
@@ -40,7 +44,7 @@ public class DiagnosisGraphPanel extends JPanel
 {
 	public DiagnosisGraphPanel() {}
 	
-	public DiagnosisGraphPanel(NamedObj workflow)
+	public DiagnosisGraphPanel(NamedObj workflow, int runID)
 	{
 		// add graph model to the graph panel
 		ActorGraphModel graphModel = new ActorGraphModel(workflow);
@@ -53,6 +57,8 @@ public class DiagnosisGraphPanel extends JPanel
 		// set graph pane of _jgraph
 		BasicGraphPane graphPane = new BasicGraphPane(getController(), getModel(), workflow);
 		_jgraph = new JGraph(graphPane);
+		
+		_runID = runID;
 		
 		_graphPanner = new JCanvasPanner(_jgraph);
 	}
@@ -151,6 +157,18 @@ public class DiagnosisGraphPanel extends JPanel
 				}
 			}
 			
+			// prepare provenance data
+			Queryable query = DiagnosisManager.getInstance().getQueryable();
+			try
+			{
+				List<Integer> ids = query.getTokensForExecution(_runID, true);
+				System.out.println(ids);
+			} catch (QueryException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			// create provenance table panel for each relation
 			Iterator<ComponentRelation> relationsIter = relations.iterator();
 			while (relationsIter.hasNext())
@@ -203,9 +221,9 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	public static class Factory
 	{
-		public DiagnosisGraphPanel createDiagnosisGraphPanel(NamedObj workflow)
+		public DiagnosisGraphPanel createDiagnosisGraphPanel(NamedObj workflow, int runID)
 		{
-			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow);
+			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow, runID);
 			
 			canvasPanel.initDiagnosisGraphPanel();
 			
@@ -343,6 +361,9 @@ public class DiagnosisGraphPanel extends JPanel
 	private ActorGraphModel _model;
 	
 	private ActorEditorGraphController _controller;
+	
+	/** The workflow run id of this diagnosis graph panel corresponds to */
+	private int _runID;
 	
 	private JCanvasPanner _graphPanner;
 	

@@ -86,6 +86,7 @@ public class DiagnosisPanel extends JPanel implements TabPane, StateChangeListen
 			WorkflowRun wfRun = (WorkflowRun) namedObj;
 			String runsModDeps = wfRun.getModuleDependencies();
 			KeplerLSID runLSID = wfRun.getExecLSID();
+			int runID = wfRun.getExecId();
 			KeplerLSID workflowLSID = wfRun.getWorkflowLSID();
 			
 			WorkflowRunManagerManager wrmm = WorkflowRunManagerManager.getInstance();
@@ -93,7 +94,7 @@ public class DiagnosisPanel extends JPanel implements TabPane, StateChangeListen
 			NamedObj workflow = wrm.getAssociatedWorkflowForWorkflowRun(runLSID);
 				
 			DiagnosisGraphPanel.Factory factory = new DiagnosisGraphPanel.Factory();
-			DiagnosisGraphPanel canvasPanel = factory.createDiagnosisGraphPanel(workflow);
+			DiagnosisGraphPanel canvasPanel = factory.createDiagnosisGraphPanel(workflow, runID);
 			ViewManager viewman = ViewManager.getInstance();
 			try
 			{
