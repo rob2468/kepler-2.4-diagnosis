@@ -24,6 +24,8 @@ import org.kepler.objectmanager.lsid.KeplerLSID;
 import org.kepler.provenance.QueryException;
 import org.kepler.util.WorkflowRun;
 
+import diva.graph.GraphEvent;
+import diva.graph.GraphListener;
 import diva.graph.GraphUtilities;
 import diva.graph.JGraph;
 import diva.gui.toolbox.JCanvasPanner;
@@ -386,6 +388,46 @@ public class DiagnosisGraphPanel extends JPanel
 		private String orientation = "";
     }
     
+    private class ChangeListener implements GraphListener
+    {
+
+		@Override
+		public void edgeHeadChanged(GraphEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void edgeTailChanged(GraphEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void nodeAdded(GraphEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void nodeRemoved(GraphEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void structureChanged(GraphEvent e)
+		{
+			// TODO Auto-generated method stub
+			System.out.println("structureChanged");
+		}
+    	
+    	
+    }
     public TableauFrame getFrame()
     {
     	return _frame;
@@ -413,6 +455,7 @@ public class DiagnosisGraphPanel extends JPanel
 	public void setModel(ActorGraphModel _model)
 	{
 		this._model = _model;
+		this._model.addGraphListener(_localListener);
 	}
 	
 	public int getRunID()
@@ -481,5 +524,7 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	private JScrollBar _verticalScrollBar;
 	private ScrollBarListener _verticalScrollBarListener;
+	
+	private ChangeListener _localListener = new ChangeListener();
 	
 }
