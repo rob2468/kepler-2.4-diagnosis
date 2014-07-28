@@ -16,6 +16,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 
 import org.kepler.diagnosis.DiagnosisManager;
 import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
@@ -221,7 +222,10 @@ public class DiagnosisGraphPanel extends JPanel
 				}
 				
 				DefaultTableModel tableModel = new DefaultTableModel();
-				String[] columnIdentifiers={"id", "data"};
+				Vector<String> columnIdentifiers = new Vector<String>();
+				columnIdentifiers.addElement("id");
+				columnIdentifiers.addElement("data");
+				
 				tableModel.setColumnIdentifiers(columnIdentifiers);
 				if (tokenIDs != null)
 				{
@@ -246,6 +250,11 @@ public class DiagnosisGraphPanel extends JPanel
 				tablePane.setTablePaneModel(tableModel);
 				tablePane.setBounds(x, y,  width, height);				
 				
+				for (int i=0; i<columnIdentifiers.size(); i++)
+				{
+					TableColumn tc = tablePane.getTablePane().getColumn(columnIdentifiers.get(i));
+					tc.setCellRenderer(tablePane.new ProvTableCellRenderer());
+				}
 				_allTablePanes.addElement(tablePane);
 			}
 		}
