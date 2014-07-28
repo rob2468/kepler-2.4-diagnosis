@@ -177,12 +177,9 @@ public class DiagnosisGraphPanel extends JPanel
 				ProvenanceTablePane.Factory factory = new ProvenanceTablePane.Factory();
 				ProvenanceTablePane tablePane = (ProvenanceTablePane) factory.createProvenanceTablePane();
 				tablePane.setRelation(relation);
-				
-				int x = 0, y = 0, width = 100, height = 100;
-				
+								
 				List<?> ports = relation.linkedPortList();
 				Iterator<?> portsIter = ports.iterator();
-				int num = 0;
 				
 				List<Integer> tokenIDs = null;
 				while (portsIter.hasNext())
@@ -193,11 +190,6 @@ public class DiagnosisGraphPanel extends JPanel
 					{
 						if (locatableNodes.elementAt(i).getContainer() == node)
 						{
-							double []location = locatableNodes.elementAt(i).getLocation();
-							x += (int) location[0];
-							y += (int) location[1];
-							num++;
-							
 							String fullPortName = port.getFullName();
 							Integer portID;
 							try
@@ -216,16 +208,10 @@ public class DiagnosisGraphPanel extends JPanel
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
-							
 							break;
 						}// if
 					}// for
 				}// while
-				if (num != 0)
-				{
-					x /= num;
-					y /= num;
-				}
 				
 				DefaultTableModel tableModel = new DefaultTableModel();
 				Vector<String> columnIdentifiers = new Vector<String>();
@@ -254,7 +240,9 @@ public class DiagnosisGraphPanel extends JPanel
 					}
 				}
 				tablePane.setTablePaneModel(tableModel);
-				tablePane.setBounds(x, y,  width, height);				
+				
+				int x = 0, y = 0, width = 100, height = 100;
+				tablePane.setBounds(x, y,  width, height);
 				
 				for (int i=0; i<columnIdentifiers.size(); i++)
 				{
@@ -262,8 +250,60 @@ public class DiagnosisGraphPanel extends JPanel
 					tc.setCellRenderer(tablePane.new ProvTableCellRenderer());
 				}
 				_allTablePanes.addElement(tablePane);
+				layoutAllTablePanes();
 			}
 		}
+	}
+	
+	public void layoutAllTablePanes()
+	{
+		Iterator<JComponent> tablePanesIter = _allTablePanes.iterator();
+		// iterate all table panes
+		while (tablePanesIter.hasNext())
+		{
+			ProvenanceTablePane tablePane = (ProvenanceTablePane) tablePanesIter.next();
+			int x = 0, y = 0, width = 100, height = 100;
+			
+			// collect locatable nodes for actors
+			Vector<Location> locatableNodes = new Vector<Location>();
+			Iterator<?> nodesIter = GraphUtilities.nodeSet(_model.getRoot(), _model).iterator();
+			while (nodesIter.hasNext())
+			{
+				Object node = nodesIter.next();
+				if (node instanceof Location)
+				{
+					locatableNodes.addElement((Location) node);
+				}
+			}
+			
+			ComponentRelation relation = tablePane.getRelation();
+			List<?> ports = relation.linkedPortList();
+			Iterator<?> portsIter = ports.iterator();
+			int num = 0;
+			
+			while (portsIter.hasNext())
+			{
+				TypedIOPort port = (TypedIOPort) portsIter.next();
+				NamedObj node = port.getContainer();
+				for (int i = 0; i<locatableNodes.size(); i++)
+				{
+					if (locatableNodes.elementAt(i).getContainer() == node)
+					{
+						double []location = locatableNodes.elementAt(i).getLocation();
+						x += (int) location[0];
+						y += (int) location[1];
+						num++;
+						break;
+					}// if
+				}// for
+			}// while
+			if (num != 0)
+			{
+				x /= num;
+				y /= num;
+			}
+			tablePane.setBounds(x+_xOffset, y+_yOffset,  width, height);
+		}// while iterate all table panes
 	}
 	
 	public static class Factory
@@ -341,6 +381,7 @@ public class DiagnosisGraphPanel extends JPanel
                     _graphPanner.repaint();
                 }
                 
+                 _xOffset += (int) (visibleRect.getX() - newLeft.getX());
                 Iterator<JComponent> tablePanesIte = _allTablePanes.iterator();
 				while (tablePanesIte.hasNext())
 				{
@@ -370,6 +411,7 @@ public class DiagnosisGraphPanel extends JPanel
                     _graphPanner.repaint();
                 }
                 
+                _yOffset += (int) (visibleRect.getY() - newTop.getY());
                 Iterator<JComponent> tablePanesIte = _allTablePanes.iterator();
 				while (tablePanesIte.hasNext())
 				{
@@ -421,12 +463,9 @@ public class DiagnosisGraphPanel extends JPanel
 
 		@Override
 		public void structureChanged(GraphEvent e)
-		{
-			// TODO Auto-generated method stub
-			System.out.println("structureChanged");
+		{			
+			layoutAllTablePanes();
 		}
-    	
-    	
     }
     public TableauFrame getFrame()
     {
@@ -524,6 +563,9 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	private JScrollBar _verticalScrollBar;
 	private ScrollBarListener _verticalScrollBarListener;
+	
+	private Integer _xOffset = 0;
+	private Integer _yOffset = 0;
 	
 	private ChangeListener _localListener = new ChangeListener();
 	
