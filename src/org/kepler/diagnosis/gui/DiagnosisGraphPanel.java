@@ -31,6 +31,7 @@ import diva.util.java2d.ShapeUtilities;
 import ptolemy.actor.TypedIOPort;
 import ptolemy.actor.gui.SizeAttribute;
 import ptolemy.actor.gui.Tableau;
+import ptolemy.actor.gui.TableauFrame;
 import ptolemy.kernel.ComponentRelation;
 import ptolemy.kernel.CompositeEntity;
 import ptolemy.kernel.util.IllegalActionException;
@@ -48,14 +49,17 @@ public class DiagnosisGraphPanel extends JPanel
 {
 	public DiagnosisGraphPanel() {}
 	
-	public DiagnosisGraphPanel(NamedObj workflow)
+	public DiagnosisGraphPanel(NamedObj workflow, TableauFrame frame)
 	{
+		setFrame(frame);
+		
 		// add graph model to the graph panel
 		ActorGraphModel graphModel = new ActorGraphModel(workflow);
 		setModel(graphModel);
 		
 		// add graph controller to the graph panel
 		ActorEditorGraphController graphController = new ActorEditorGraphController();
+		graphController.setConfiguration(frame.getConfiguration());
 		setController(graphController);
 		
 		// set graph pane of _jgraph
@@ -262,12 +266,12 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	public static class Factory
 	{
-		public DiagnosisGraphPanel createDiagnosisGraphPanel(NamedObj workflow, WorkflowRun wfRun)
+		public DiagnosisGraphPanel createDiagnosisGraphPanel(NamedObj workflow, WorkflowRun wfRun, TableauFrame frame)
 		{
 			int runID = wfRun.getExecId();
 			KeplerLSID workflowLSID = wfRun.getWorkflowLSID();
 			
-			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow);
+			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow, frame);
 			
 			canvasPanel.initDiagnosisGraphPanel();
 			canvasPanel.setRunID(runID);
@@ -382,6 +386,15 @@ public class DiagnosisGraphPanel extends JPanel
 		private String orientation = "";
     }
     
+    public TableauFrame getFrame()
+    {
+    	return _frame;
+    }
+    
+    public void setFrame(TableauFrame _frame)
+    {
+    	this._frame = _frame;
+    }
 	public JGraph getGraph()
 	{
 		return _jgraph;
@@ -442,6 +455,8 @@ public class DiagnosisGraphPanel extends JPanel
 		this._workflowLSID = _workflowLSID;
 	}
 
+	private TableauFrame _frame;
+	
 	/** The instance of JGraph for this editor */
 	private JGraph _jgraph;
 	

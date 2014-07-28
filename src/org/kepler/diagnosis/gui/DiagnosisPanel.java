@@ -89,9 +89,9 @@ public class DiagnosisPanel extends JPanel implements TabPane, StateChangeListen
 			WorkflowRunManagerManager wrmm = WorkflowRunManagerManager.getInstance();
 			WorkflowRunManager wrm = wrmm.getWRM(_frame);
 			NamedObj workflow = wrm.getAssociatedWorkflowForWorkflowRun(runLSID);
-				
+			
 			DiagnosisGraphPanel.Factory factory = new DiagnosisGraphPanel.Factory();
-			DiagnosisGraphPanel canvasPanel = factory.createDiagnosisGraphPanel(workflow, wfRun);
+			DiagnosisGraphPanel canvasPanel = factory.createDiagnosisGraphPanel(workflow, wfRun, _frame);
 			ViewManager viewman = ViewManager.getInstance();
 			try
 			{
