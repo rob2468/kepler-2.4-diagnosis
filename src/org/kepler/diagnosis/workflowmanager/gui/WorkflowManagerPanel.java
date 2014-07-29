@@ -41,6 +41,10 @@ public class WorkflowManagerPanel extends JPanel implements TabPane, ActionListe
 	
 	private JMenuItem openMenuItem = new JMenuItem(OPEN_WORKFLOW);
 	
+	private static int doubleClick = 2;
+	
+	private boolean lastMouseEventWasPopupTrigger;
+	
 	public WorkflowManagerPanel(String title)
 	{
 		_title = title;
@@ -69,6 +73,32 @@ public class WorkflowManagerPanel extends JPanel implements TabPane, ActionListe
 		
 		wmjTable.getColumn(WMDefaults.ID).setCellRenderer(new WorkflowManagerTableCellRenderer());
 		wmjTable.getColumn(WMDefaults.NAME).setCellRenderer(new WorkflowManagerTableCellRenderer());		
+		
+		wmjTable.addMouseListener(new java.awt.event.MouseAdapter() {
+			// os X
+			public void mousePressed(java.awt.event.MouseEvent evt) {
+				if ((evt.getClickCount() == doubleClick)
+						&& !evt.isPopupTrigger()
+						&& !lastMouseEventWasPopupTrigger) {
+					//openMenuItem.doClick();
+				} else {
+//					setTagContextToCurrentlySelectedRows();
+					jTableShowContextMenu(evt);
+				}
+				lastMouseEventWasPopupTrigger = evt.isPopupTrigger();
+			}
+
+			// Windows
+			public void mouseReleased(java.awt.event.MouseEvent evt) {
+				if ((evt.getClickCount() == doubleClick)
+						&& !evt.isPopupTrigger()
+						&& !lastMouseEventWasPopupTrigger) {
+				} else {
+					jTableShowContextMenu(evt);
+				}
+				lastMouseEventWasPopupTrigger = evt.isPopupTrigger();
+			}
+		});
 		
 		JScrollPane _workflowManagerPane = new JScrollPane(wmjTable);
 		
@@ -129,6 +159,7 @@ public class WorkflowManagerPanel extends JPanel implements TabPane, ActionListe
 		openMenuItem.removeActionListener(this);
 		openMenuItem.addActionListener(this);
 		openMenuItem.setActionCommand(OPEN_WORKFLOW);
+		openMenuItem.setEnabled(true);
 		
 		popupMenu.add(openMenuItem);
 	}
@@ -139,6 +170,14 @@ public class WorkflowManagerPanel extends JPanel implements TabPane, ActionListe
 		
 	}
 	
+	private void jTableShowContextMenu(java.awt.event.MouseEvent mouseEvent)
+	{
+		if (mouseEvent.isPopupTrigger() || mouseEvent.isControlDown())
+		{
+			int row = wmjTable.rowAtPoint(mouseEvent.getPoint());
+			popupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+		}
+	}
 	public class WorkflowManagerTableCellRenderer extends DefaultTableCellRenderer
 	{
 		public WorkflowManagerTableCellRenderer()
