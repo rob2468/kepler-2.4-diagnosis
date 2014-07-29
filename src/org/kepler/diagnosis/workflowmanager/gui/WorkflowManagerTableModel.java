@@ -63,6 +63,13 @@ public class WorkflowManagerTableModel extends DefaultTableModel
 			return workflow.getName();
 		}
 	}
+	
+	@Override
+	public boolean isCellEditable(int rowIndex, int columnIndex)
+	{
+		return false;
+	}
+	
 	public TableauFrame getTableauFrame()
 	{
 		return tableauFrame;
