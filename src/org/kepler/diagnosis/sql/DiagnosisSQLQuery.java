@@ -3,9 +3,11 @@ package org.kepler.diagnosis.sql;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.kepler.diagnosis.workflowmanager.gui.WorkflowRow;
 import org.kepler.objectmanager.lsid.KeplerLSID;
 import org.kepler.provenance.QueryException;
 import org.kepler.provenance.sql.SQLQueryV8;
@@ -64,6 +66,40 @@ public class DiagnosisSQLQuery extends SQLQueryV8
 			ps.setInt(1, runID);
 			ps.setInt(2, actorID);
 			return _getIntResults(ps, 1);
+		}
+		catch(SQLException e)
+        {
+            throw new QueryException("Error querying workflow name: ", e);
+        }
+	}
+	
+	public ArrayList<WorkflowRow> getAllWorkflowIDAndName() throws QueryException
+	{
+		try
+		{
+			ArrayList<WorkflowRow> workflows = new ArrayList<WorkflowRow>();
+			PreparedStatement ps = _dbType.getPrepStatement("SELECT id, name "
+					+ "FROM workflow");
+			ResultSet result = null;
+			try
+			{
+				result = ps.executeQuery();
+				while (result.next())
+				{
+					WorkflowRow workflow = new WorkflowRow();
+					workflow.setId(result.getInt(1));
+					workflow.setName(result.getString(2));
+					workflows.add(workflow);
+				}
+			}
+			finally
+			{
+				if(result != null)
+                {
+                    result.close();
+                }
+			}
+			return workflows;
 		}
 		catch(SQLException e)
         {
