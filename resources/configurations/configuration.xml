@@ -42,6 +42,11 @@
 			<name>Outline</name>
 			<class>org.kepler.gui.WorkflowOutlineTabPane$Factory</class>
 		</tabPane>
+		<tabPane>
+			<name>Workflow Manager</name>
+			<class>org.kepler.diagnosis.workflowmanager.gui.WorkflowManagerPanel$Factory
+			</class>
+		</tabPane>
 	</tabPaneFactory>
 
 	<!-- define the viewPane factories to use -->
@@ -124,6 +129,9 @@
 			</viewPaneLocation>
 			<viewPaneLocation>
 				<name>SW</name>
+				<tabPane>
+					<name>Workflow Manager</name>
+				</tabPane>
 			</viewPaneLocation>
 			<viewPaneLocation>
 				<name>SE</name>
