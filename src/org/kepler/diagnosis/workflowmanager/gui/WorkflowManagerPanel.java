@@ -2,6 +2,7 @@ package org.kepler.diagnosis.workflowmanager.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -15,6 +16,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.kepler.diagnosis.workflowmanager.WMDefaults;
@@ -117,7 +120,10 @@ public class WorkflowManagerPanel extends JPanel implements TabPane, ActionListe
 		_workflowManagerPane.setPreferredSize(new Dimension(WMDefaults.WM_PANE_WIDTH, WMDefaults.WM_PANE_HEIGHT));		
 		this.add(upperPanel, BorderLayout.NORTH);
 		this.add(_workflowManagerPane);
-		this.revalidate();		
+		this.revalidate();
+		
+		wmjTable.getSelectionModel().addListSelectionListener(
+				_listSelectionListener);
 	}
 
 	@Override
@@ -166,9 +172,25 @@ public class WorkflowManagerPanel extends JPanel implements TabPane, ActionListe
 	
 	public void actionPerformed(ActionEvent e)
 	{
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
-		
+		if (e.getActionCommand().equals(OPEN_WORKFLOW))
+		{
+			System.out.println("OPEN_WORKFLOW");
+			
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		}
 	}
+	
+	private ListSelectionListener _listSelectionListener = new ListSelectionListener() {
+
+		public void valueChanged(ListSelectionEvent e) {
+			if (!e.getValueIsAdjusting())
+			{
+				
+			}
+		}
+	};
 	
 	private void jTableShowContextMenu(java.awt.event.MouseEvent mouseEvent)
 	{
