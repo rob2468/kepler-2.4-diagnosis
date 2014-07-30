@@ -49,6 +49,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.kepler.configuration.ConfigurationManager;
 import org.kepler.configuration.ConfigurationProperty;
+import org.kepler.diagnosis.gui.DiagnosisGraphPanel;
 import org.kepler.gui.state.StateChangeMonitor;
 import org.kepler.gui.state.ViewStateChangeEvent;
 
@@ -337,8 +338,16 @@ public class ViewManager {
 		{
 			String viewPaneName = "Diagnosis";
 			ViewPane theViewPane = getViewPane(parent, viewPaneName);
-	
-			String canvasTabPaneName = "Diagnosis";
+			
+			// add prefix to the tab panel's title
+			// wf: workflow
+			// wr: workflow run
+			String canvasTabPaneName;
+			if (((DiagnosisGraphPanel) canvas).getGraphType().equals(DiagnosisGraphPanel.WORKFLOW_GRAPH_TYPE))
+				canvasTabPaneName = "wf: ";
+			else
+				canvasTabPaneName = "wr: ";
+			canvasTabPaneName += ((DiagnosisGraphPanel) canvas).getTitle();
 			canvas.setName(canvasTabPaneName);
 	
 			String viewPaneLocationName = "NE";

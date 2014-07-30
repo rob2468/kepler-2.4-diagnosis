@@ -310,7 +310,7 @@ public class DiagnosisGraphPanel extends JPanel
 			tablePane.setBounds(x+_xOffset, y+_yOffset,  width, height);
 		}// while iterate all table panes
 	}
-	
+
 	public static class Factory
 	{
 		// create diagnosis graph panel for a single workflow run
@@ -348,6 +348,7 @@ public class DiagnosisGraphPanel extends JPanel
 			canvasPanel.setWorkflowLSID(workflowLSID);
 			
 			canvasPanel.setWorkflowID(workflowID);
+			canvasPanel.setTitle(workflow.getName());
 			
 			canvasPanel.createAllTablePanes();
 			Iterator<JComponent> tablePanesIter = canvasPanel._allTablePanes.iterator();
@@ -364,6 +365,7 @@ public class DiagnosisGraphPanel extends JPanel
 		public DiagnosisGraphPanel createDiagnosisGraphPanel(WorkflowRow workflowRow, TableauFrame frame)
 		{
 			int workflowID = workflowRow.getId();
+			String workflowName = workflowRow.getName();
 			KeplerLSID workflowLSID = null;
 			DiagnosisSQLQuery query;
 			KeplerLSID runLSID = null;
@@ -398,6 +400,7 @@ public class DiagnosisGraphPanel extends JPanel
 			canvasPanel.setGraphType(WORKFLOW_GRAPH_TYPE);
 			canvasPanel.initDiagnosisGraphPanel();
 			canvasPanel.setWorkflowID(workflowID);
+			canvasPanel.setTitle(workflowName);
 			canvasPanel.setWorkflowLSID(workflowLSID);
 			
 			canvasPanel.createAllTablePanes();
@@ -536,6 +539,17 @@ public class DiagnosisGraphPanel extends JPanel
 			layoutAllTablePanes();
 		}
     }
+    
+    public String getTitle()
+	{
+		return _title;
+	}
+
+	public void setTitle(String _title)
+	{
+		this._title = _title;
+	}
+	
     public TableauFrame getFrame()
     {
     	return _frame;
@@ -545,6 +559,7 @@ public class DiagnosisGraphPanel extends JPanel
     {
     	this._frame = _frame;
     }
+    
 	public JGraph getGraph()
 	{
 		return _jgraph;
@@ -615,6 +630,8 @@ public class DiagnosisGraphPanel extends JPanel
 	{
 		this._workflowLSID = _workflowLSID;
 	}
+	
+	private String _title;
 
 	private TableauFrame _frame;
 	
@@ -631,8 +648,8 @@ public class DiagnosisGraphPanel extends JPanel
 	private int _workflowID;
 	
 	/** _graphType indicates that this graph panel is a workflow or a workflow run */
-	private final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
-	private final static String WORKFLOW_RUN_GRAPH_TYPE = "WORKFLOW_RUN_GRAPH_TYPE";
+	public final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
+	public final static String WORKFLOW_RUN_GRAPH_TYPE = "WORKFLOW_RUN_GRAPH_TYPE";
 	private String _graphType;
 	
 	private KeplerLSID _workflowLSID;
