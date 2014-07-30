@@ -201,6 +201,10 @@ public class WorkflowManagerPanel extends JPanel implements TabPane, ActionListe
 				e1.printStackTrace();
 			}
 		}
+		else if (e.getActionCommand().equals(REFRESH))
+		{
+			wmTableModel.updataData();
+		}
 		setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 	
