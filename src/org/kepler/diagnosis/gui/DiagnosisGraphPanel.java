@@ -20,9 +20,12 @@ import javax.swing.table.TableColumn;
 
 import org.kepler.diagnosis.DiagnosisManager;
 import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
+import org.kepler.diagnosis.workflowmanager.gui.WorkflowRow;
 import org.kepler.objectmanager.lsid.KeplerLSID;
 import org.kepler.provenance.QueryException;
 import org.kepler.util.WorkflowRun;
+import org.kepler.workflowrunmanager.WorkflowRunManager;
+import org.kepler.workflowrunmanager.WorkflowRunManagerManager;
 
 import diva.graph.GraphEvent;
 import diva.graph.GraphListener;
@@ -331,16 +334,53 @@ public class DiagnosisGraphPanel extends JPanel
 			}
 			
 			canvasPanel.createAllTablePanes();
-			Iterator<JComponent> tablePanesIte = canvasPanel._allTablePanes.iterator();
-			while (tablePanesIte.hasNext())
+			Iterator<JComponent> tablePanesIter = canvasPanel._allTablePanes.iterator();
+			while (tablePanesIter.hasNext())
 			{
-				JComponent tablePane = tablePanesIte.next();
+				JComponent tablePane = tablePanesIter.next();
 				canvasPanel._jgraph.add(tablePane);
 			}
 			
 			return canvasPanel;
 		}
-		
+		public DiagnosisGraphPanel createDiagnosisGraphPanel(WorkflowRow workflowRow, TableauFrame frame)
+		{
+			KeplerLSID workflowLSID = null;
+			DiagnosisSQLQuery query;
+			KeplerLSID runLSID = null;
+			try
+			{
+				// add a fake revision number to the workflow lsid
+				workflowLSID = new KeplerLSID(workflowRow.getLsid()+":1");
+
+				query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
+
+				runLSID = query.getLastExecutionLSIDForWorkflow(workflowLSID);
+			} catch (Exception e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			WorkflowRunManagerManager wrmm = WorkflowRunManagerManager.getInstance();
+			WorkflowRunManager wrm = wrmm.getWRM(frame);
+			NamedObj workflow = wrm.getAssociatedWorkflowForWorkflowRun(runLSID);
+			
+			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow, frame);
+			
+			canvasPanel.initDiagnosisGraphPanel();
+			canvasPanel.setWorkflowID(workflowRow.getId());
+			canvasPanel.setWorkflowLSID(workflowLSID);
+			
+			canvasPanel.createAllTablePanes();
+			Iterator<JComponent> tablePanesIter = canvasPanel._allTablePanes.iterator();
+			while (tablePanesIter.hasNext())
+			{
+				JComponent tablePane = tablePanesIter.next();
+				canvasPanel._jgraph.add(tablePane);
+			}
+			
+			return canvasPanel;
+		}
 	}
 	
 	/**
@@ -527,6 +567,16 @@ public class DiagnosisGraphPanel extends JPanel
 		this._workflowID = _workflowID;
 	}
 	
+	public String getGraphType()
+	{
+		return _graphType;
+	}
+	
+	public void setGraphType(String _graphType)
+	{
+		this._graphType = _graphType;
+	}
+	
 	public KeplerLSID getWorkflowLSID()
 	{
 		return _workflowLSID;
@@ -550,6 +600,11 @@ public class DiagnosisGraphPanel extends JPanel
 	private int _runID;
 	
 	private int _workflowID;
+	
+	/** _graphType indicates that this graph panel is a workflow or a workflow run */
+	private final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
+	private final static String WORKFLOW_RUN_GRAPH_TYPE = "WORKFLOW_RUN_GRAPH_TYPE";
+	private String _graphType;
 	
 	private KeplerLSID _workflowLSID;
 	

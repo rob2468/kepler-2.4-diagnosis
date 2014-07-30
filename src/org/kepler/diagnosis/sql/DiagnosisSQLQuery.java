@@ -78,7 +78,7 @@ public class DiagnosisSQLQuery extends SQLQueryV8
 		try
 		{
 			ArrayList<WorkflowRow> workflows = new ArrayList<WorkflowRow>();
-			PreparedStatement ps = _dbType.getPrepStatement("SELECT id, name "
+			PreparedStatement ps = _dbType.getPrepStatement("SELECT id, name, lsid "
 					+ "FROM workflow");
 			ResultSet result = null;
 			try
@@ -89,6 +89,7 @@ public class DiagnosisSQLQuery extends SQLQueryV8
 					WorkflowRow workflow = new WorkflowRow();
 					workflow.setId(result.getInt(1));
 					workflow.setName(result.getString(2));
+					workflow.setLsid(result.getString(3));
 					workflows.add(workflow);
 				}
 			}
@@ -107,8 +108,22 @@ public class DiagnosisSQLQuery extends SQLQueryV8
         }
 	}
 	
-//	public Integer getPortEventID(int portID, int actorFireID)
-//	{
-//		
-//	}
+	/** Get a list of executions for a specific workflow. */
+    public List<Integer> getExecutionsForWorkflow(int workflowID)
+        throws QueryException
+    {
+    	try
+    	{
+    		PreparedStatement ps = _dbType.getPrepStatement("SELECT id "
+    				+ "FROM workflow, workflow_exec "
+    				+ "WHERE workflow.id = workflow_exec.wf_id AND workflow.id = ?");
+    		ps.setInt(1, workflowID);
+    		return _getIntResults(ps, 1);
+    	}
+    	catch(SQLException e)
+        {
+            throw new QueryException("Unable to query executions for " +
+                "workflow id " + workflowID + ": ", e);
+        }
+    }
 }

@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.JButton;
@@ -20,9 +21,11 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import org.kepler.diagnosis.gui.DiagnosisGraphPanel;
 import org.kepler.diagnosis.workflowmanager.WMDefaults;
 import org.kepler.gui.TabPane;
 import org.kepler.gui.TabPaneFactory;
+import org.kepler.gui.ViewManager;
 
 import ptolemy.actor.gui.TableauFrame;
 import ptolemy.kernel.util.IllegalActionException;
@@ -176,10 +179,29 @@ public class WorkflowManagerPanel extends JPanel implements TabPane, ActionListe
 		
 		if (e.getActionCommand().equals(OPEN_WORKFLOW))
 		{
-			System.out.println("OPEN_WORKFLOW");
+			Integer workflowID = (Integer) wmTableModel.getValueAt(wmjTable.getSelectedRow(), 0);
+			ArrayList<WorkflowRow> workflows = wmTableModel.getWorkflows();
+			WorkflowRow workflow = null;
+			for (int i=0; i<workflows.size(); i++)
+			{
+				WorkflowRow temp = workflows.get(i);
+				if (workflowID == temp.getId())
+					workflow = temp;
+			}
 			
-			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			DiagnosisGraphPanel.Factory factory = new DiagnosisGraphPanel.Factory();
+			DiagnosisGraphPanel canvasPanel = factory.createDiagnosisGraphPanel(workflow, _frame);
+			ViewManager viewman = ViewManager.getInstance();
+			try
+			{
+				viewman.addDiagnosisCanvasToLocationNE(canvasPanel, _frame);
+			} catch (Exception e1)
+			{
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
+		setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 	
 	private ListSelectionListener _listSelectionListener = new ListSelectionListener() {

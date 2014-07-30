@@ -70,6 +70,14 @@ public class WorkflowManagerTableModel extends DefaultTableModel
 		return false;
 	}
 	
+	public ArrayList<WorkflowRow> getWorkflows()
+	{
+		return workflows;
+	}
+	public void setWorkflows(ArrayList<WorkflowRow> workflows)
+	{
+		this.workflows = workflows; 
+	}
 	public TableauFrame getTableauFrame()
 	{
 		return tableauFrame;
