@@ -2,6 +2,7 @@ package org.kepler.diagnosis.gui;
 
 import java.awt.Adjustable;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.AdjustmentEvent;
 import java.awt.geom.AffineTransform;
@@ -21,6 +22,7 @@ import javax.swing.table.TableColumn;
 import org.kepler.diagnosis.DiagnosisManager;
 import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
 import org.kepler.diagnosis.workflowmanager.gui.WorkflowRow;
+import org.kepler.gui.ViewManager;
 import org.kepler.objectmanager.lsid.KeplerLSID;
 import org.kepler.provenance.QueryException;
 import org.kepler.util.WorkflowRun;
@@ -311,27 +313,41 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	public static class Factory
 	{
+		// create diagnosis graph panel for a single workflow run
 		public DiagnosisGraphPanel createDiagnosisGraphPanel(NamedObj workflow, WorkflowRun wfRun, TableauFrame frame)
 		{
 			int runID = wfRun.getExecId();
 			KeplerLSID workflowLSID = wfRun.getWorkflowLSID();
 			
-			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow, frame);
-			
-			canvasPanel.initDiagnosisGraphPanel();
-			canvasPanel.setRunID(runID);
-			canvasPanel.setWorkflowLSID(workflowLSID);
 			DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
-			int workflowID;
+			Integer workflowID = null;
 			try
 			{
 				workflowID = query.getWorkflowID(workflowLSID);
-				canvasPanel.setWorkflowID(workflowID);
-			} catch (QueryException e)
+			} catch (QueryException e1)
 			{
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				e1.printStackTrace();
 			}
+			
+			// check if this workflow run diagnosis graph panel has already been added
+			ViewManager vm = ViewManager.getInstance();
+			Vector<Component> canvasPanels = vm.getDiagnosisCanvases();
+			int i;
+			for (i=0; i<canvasPanels.size(); i++)
+			{
+				DiagnosisGraphPanel temp = (DiagnosisGraphPanel) canvasPanels.get(i);
+				if (temp.getGraphType().equals(WORKFLOW_RUN_GRAPH_TYPE) && temp.getRunID()==runID)
+					return temp;
+			}
+			
+			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow, frame);
+			canvasPanel.setGraphType(WORKFLOW_RUN_GRAPH_TYPE);
+			canvasPanel.initDiagnosisGraphPanel();
+			canvasPanel.setRunID(runID);
+			canvasPanel.setWorkflowLSID(workflowLSID);
+			
+			canvasPanel.setWorkflowID(workflowID);
 			
 			canvasPanel.createAllTablePanes();
 			Iterator<JComponent> tablePanesIter = canvasPanel._allTablePanes.iterator();
@@ -343,8 +359,11 @@ public class DiagnosisGraphPanel extends JPanel
 			
 			return canvasPanel;
 		}
+		
+		// create diagnosis graph panel for a workflow
 		public DiagnosisGraphPanel createDiagnosisGraphPanel(WorkflowRow workflowRow, TableauFrame frame)
 		{
+			int workflowID = workflowRow.getId();
 			KeplerLSID workflowLSID = null;
 			DiagnosisSQLQuery query;
 			KeplerLSID runLSID = null;
@@ -352,23 +371,33 @@ public class DiagnosisGraphPanel extends JPanel
 			{
 				// add a fake revision number to the workflow lsid
 				workflowLSID = new KeplerLSID(workflowRow.getLsid()+":1");
-
 				query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
-
 				runLSID = query.getLastExecutionLSIDForWorkflow(workflowLSID);
 			} catch (Exception e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			// check if this workflow diagnosis graph panel has already been added
+			ViewManager vm = ViewManager.getInstance();
+			Vector<Component> canvasPanels = vm.getDiagnosisCanvases();
+			int i;
+			for (i=0; i<canvasPanels.size(); i++)
+			{
+				DiagnosisGraphPanel temp = (DiagnosisGraphPanel) canvasPanels.get(i);
+				if (temp.getGraphType().equals(WORKFLOW_GRAPH_TYPE) && temp.getWorkflowID()==workflowID)
+					return temp;
+			}
+			
 			WorkflowRunManagerManager wrmm = WorkflowRunManagerManager.getInstance();
 			WorkflowRunManager wrm = wrmm.getWRM(frame);
 			NamedObj workflow = wrm.getAssociatedWorkflowForWorkflowRun(runLSID);
 			
 			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow, frame);
-			
+			canvasPanel.setGraphType(WORKFLOW_GRAPH_TYPE);
 			canvasPanel.initDiagnosisGraphPanel();
-			canvasPanel.setWorkflowID(workflowRow.getId());
+			canvasPanel.setWorkflowID(workflowID);
 			canvasPanel.setWorkflowLSID(workflowLSID);
 			
 			canvasPanel.createAllTablePanes();

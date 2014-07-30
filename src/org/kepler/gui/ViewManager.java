@@ -74,6 +74,18 @@ public class ViewManager {
 	protected WeakHashMap<TableauFrame, JPanel> _viewAreas;
 	protected WeakHashMap<TableauFrame, JComboBox> _viewComboBoxes;
 
+	// container that contains all diagnosis graphs panel that have been added
+	protected Vector<Component> _diagnosisCanvases = new Vector<Component>();
+	
+	public Vector<Component> getDiagnosisCanvases()
+	{
+		return _diagnosisCanvases;
+	}
+	public void setDiagnosisCanvases(Vector<Component> _diagnosisCanvases)
+	{
+		this._diagnosisCanvases = _diagnosisCanvases;
+	}
+	
 	/**
 	 * Constructor.
 	 */
@@ -309,18 +321,32 @@ public class ViewManager {
 		}
 	}
 	
+	/** 
+	 * if canvas has already been added, just select this canvas.
+	 * else add this canvas to the tabbed pane and select.
+	 * */
 	public void addDiagnosisCanvasToLocationNE(Component canvas, TableauFrame parent) throws Exception
 	{
-		String viewPaneName = "Diagnosis";
-		ViewPane theViewPane = getViewPane(parent, viewPaneName);
-
-		String canvasTabPaneName = "Diagnosis";
-		canvas.setName(canvasTabPaneName);
-
-		String viewPaneLocationName = "NE";
-		theViewPane.getLocationContainer(viewPaneLocationName).add(
-								canvas, -1);
-
+		int i;
+		for (i=0; i<_diagnosisCanvases.size(); i++)
+		{
+			if (canvas == _diagnosisCanvases.elementAt(i))
+				break;
+		}
+		if (i >= _diagnosisCanvases.size())
+		{
+			String viewPaneName = "Diagnosis";
+			ViewPane theViewPane = getViewPane(parent, viewPaneName);
+	
+			String canvasTabPaneName = "Diagnosis";
+			canvas.setName(canvasTabPaneName);
+	
+			String viewPaneLocationName = "NE";
+			theViewPane.getLocationContainer(viewPaneLocationName).add(
+									canvas, -1);
+			
+			_diagnosisCanvases.addElement(canvas);
+		}
 		// if the canvas is part of a tabbed pane, make sure it is
 		// selected
 		Component container = canvas.getParent();
