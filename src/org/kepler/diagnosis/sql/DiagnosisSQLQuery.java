@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.kepler.diagnosis.gui.DiagnosisGraphPanel.TokenAndPort;
 import org.kepler.diagnosis.workflowmanager.gui.WorkflowRow;
 import org.kepler.objectmanager.lsid.KeplerLSID;
 import org.kepler.provenance.QueryException;
@@ -328,5 +329,147 @@ public class DiagnosisSQLQuery extends SQLQueryV8
 		{
 			throw new QueryException("Unable to retrieve for tokens: ", e);
 		}
+    }
+    
+    public String getPortNameForPortID(Integer portID) throws QueryException
+    {
+    	String ret = "";
+    	String queryStr = "SELECT e.name "
+    			+ "FROM entity e "
+    			+ "WHERE e.id = ?";
+    	PreparedStatement ps;
+    	try
+    	{
+    		ResultSet result = null;
+			try
+			{
+				ps = _dbType.getPrepStatement(queryStr);
+				ps.setInt(1, portID);
+				result = ps.executeQuery();
+				if (result.next())
+				{
+					ret = result.getString(1);
+				}
+			}
+			finally
+			{
+				if (result != null)
+				{
+					result.close();
+				}
+			}
+			
+			return ret;
+    	}
+    	catch (SQLException e)
+		{
+			throw new QueryException("Unable to retrieve for tokens: ", e);
+		}
+    }
+    
+    public String getPortNameForTokenID(Integer tokenID) throws QueryException
+    {
+    	String ret = "";
+    	String queryStr = "SELECT e.name "
+    			+ "From port_event pe, entity e "
+    			+ "WHERE pe.port_id = e.id AND pe.id = ?";
+    	PreparedStatement ps;
+		try
+		{
+			ResultSet result = null;
+			try
+			{
+				ps = _dbType.getPrepStatement(queryStr);
+				ps.setInt(1, tokenID);
+				result = ps.executeQuery();
+				if (result.next())
+				{
+					ret = result.getString(1);
+				}
+			}
+			finally
+			{
+				if (result != null)
+				{
+					result.close();
+				}
+			}
+			
+			return ret;
+		} catch (SQLException e)
+		{
+			throw new QueryException("Unable to retrieve for tokens: ", e);
+		}
+    }
+    
+    public Integer getActorFireIDForToken(Integer tokenID) throws QueryException
+    {
+    	try
+    	{
+    		Integer ret = null;
+    		String queryStr = "SELECT pe.fire_id "
+					+ "FROM port_event pe "
+					+ "WHERE pe.id = ?";
+			PreparedStatement ps = _dbType.getPrepStatement(queryStr);
+			ps.setInt(1, tokenID);
+			ResultSet result = null;
+			try
+			{
+				result = ps.executeQuery();
+				if (result.next())
+				{
+					ret = result.getInt(1);
+				}
+			}
+			finally
+			{
+				if(result != null)
+                {
+                    result.close();
+                }
+			}
+			return ret;
+    	}
+    	catch(SQLException e)
+        {
+            throw new QueryException("Error querying workflow name: ", e);
+        }
+    }
+    
+    public LinkedList<TokenAndPort> getInputTokenIDsForActorFireID(Integer fireID) throws QueryException
+    {
+    	try
+		{
+			LinkedList<TokenAndPort> tokenAndPorts = new LinkedList<TokenAndPort>();
+			String queryStr = "SELECT pe.write_event_id, pe.port_id "
+					+ "FROM port_event pe "
+					+ "WHERE pe.fire_id = ? AND pe.write_event_id!=-1";
+			PreparedStatement ps = _dbType.getPrepStatement(queryStr);
+			ps.setInt(1, fireID);
+			ResultSet result = null;
+			try
+			{
+				result = ps.executeQuery();
+				while (result.next())
+				{
+					TokenAndPort tokenAndPort = new TokenAndPort();
+					tokenAndPort.setTokenID(result.getInt(1));
+					tokenAndPort.setPortID(result.getInt(2));
+					tokenAndPorts.add(tokenAndPort);
+				}
+			}
+			finally
+			{
+				if(result != null)
+                {
+                    result.close();
+                }
+			}
+			return tokenAndPorts;
+		}
+		catch(SQLException e)
+        {
+            throw new QueryException("Error querying workflow name: ", e);
+        }
     }
 }

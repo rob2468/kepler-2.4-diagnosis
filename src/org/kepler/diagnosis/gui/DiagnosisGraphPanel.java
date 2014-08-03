@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.Vector;
 
 import javax.swing.JComponent;
@@ -110,6 +109,19 @@ public class DiagnosisGraphPanel extends JPanel
 	// initial this graph panel according to variables set in the ctor
 	public void initDiagnosisGraphPanel()
 	{
+		// collect all ports
+		LinkedList<TypedIOPort> tmpAllPorts = new LinkedList<TypedIOPort>();
+		Iterator<?> nodesIter = GraphUtilities.nodeSet(_model.getRoot(), _model).iterator();
+		while (nodesIter.hasNext())
+		{
+			Object node = nodesIter.next();
+			if (node instanceof TypedIOPort)
+			{
+				tmpAllPorts.add((TypedIOPort) node);
+			}
+		}
+		_allPorts = tmpAllPorts;
+		
 		// set this graph panel
 		setBorder(null);
 		setLayout(new BorderLayout());
@@ -188,7 +200,7 @@ public class DiagnosisGraphPanel extends JPanel
 				ProvenanceTablePane tablePane = (ProvenanceTablePane) factory.createProvenanceTablePane();
 				tablePane.setRelation(relation);
 								
-				List<Integer> tokenIDs = queryRelationTokenIDs(relation);
+				List<Integer> tokenIDs = queryRelationTokenIDs(relation, null);
 				
 				// set table model(table content data) for this table pane
 				DefaultTableModel tableModel = new DefaultTableModel();
@@ -240,10 +252,11 @@ public class DiagnosisGraphPanel extends JPanel
 		}
 	}
 	
-	class TokenAndPort
+	public static class TokenAndPort
 	{
 		private Integer _tokenID;
 		private Integer _portID;
+		public TokenAndPort() {}
 		public TokenAndPort(Integer tokenID, Integer portID)
 		{
 			_tokenID = tokenID;
@@ -267,7 +280,7 @@ public class DiagnosisGraphPanel extends JPanel
 		}
 	}
 	
-	public List<Integer> queryRelationTokenIDs(ComponentRelation relation)
+	public List<Integer> queryRelationTokenIDs(ComponentRelation relation, LinkedList<TokenAndPort> readTokenIDs)
 	{
 		List<?> ports = relation.linkedPortList();
 		Iterator<?> portsIter = ports.iterator();
@@ -276,7 +289,8 @@ public class DiagnosisGraphPanel extends JPanel
 		
 		LinkedList<Integer> tokenIDs = new LinkedList<Integer>();
 		LinkedList<TokenAndPort> writeTokenIDs = new LinkedList<TokenAndPort>();
-		LinkedList<TokenAndPort> readTokenIDs = new LinkedList<TokenAndPort>();
+		
+		// collect all write token ids
 		while (portsIter.hasNext())
 		{
 			TypedIOPort port = (TypedIOPort) portsIter.next();
@@ -300,14 +314,6 @@ public class DiagnosisGraphPanel extends JPanel
 						Integer id = list1Iter.next();
 						writeTokenIDs.add(new TokenAndPort(id, portID));
 					}
-					
-					List<Integer> list2 = query.getReadTokensForPortID(portID);
-					Iterator<Integer> list2Iter = list2.iterator();
-					while (list2Iter.hasNext())
-					{
-						Integer id = list2Iter.next();
-						readTokenIDs.add(new TokenAndPort(id, portID));
-					}
 				}
 				else// if (getGraphType().equals(WORKFLOW_RUN_GRAPH_TYPE))
 				{
@@ -317,16 +323,7 @@ public class DiagnosisGraphPanel extends JPanel
 					{
 						Integer id = list1Iter.next();
 						writeTokenIDs.add(new TokenAndPort(id, portID));
-					}
-						
-					List<Integer> list2 = query.getReadTokensForExecutionAndPortID(_runID, portID);
-					Iterator<Integer> list2Iter = list2.iterator();
-					while (list2Iter.hasNext())
-					{
-						Integer id = list2Iter.next();
-						readTokenIDs.add(new TokenAndPort(id, portID));
-					}
-					
+					}					
 				}
 			} catch (QueryException e)
 			{
@@ -334,7 +331,54 @@ public class DiagnosisGraphPanel extends JPanel
 				e.printStackTrace();
 			}
 		}// while
-
+		
+		// collect all read token ids if readTokenIDs parameter is null
+		if (readTokenIDs == null)
+		{
+			portsIter = ports.iterator();
+			readTokenIDs = new LinkedList<TokenAndPort>();
+			while (portsIter.hasNext())
+			{
+				TypedIOPort port = (TypedIOPort) portsIter.next();
+	
+				String fullPortName = port.getFullName();
+				Integer portID;
+				
+				try
+				{
+					String entityName = fullPortName.substring(1);
+					int firstDot = entityName.indexOf('.');
+					entityName = entityName.substring(firstDot);
+					portID = query.getEntityId(entityName, _workflowLSID);
+					
+					if (getGraphType().equals(WORKFLOW_GRAPH_TYPE))
+					{						
+						List<Integer> list2 = query.getReadTokensForPortID(portID);
+						Iterator<Integer> list2Iter = list2.iterator();
+						while (list2Iter.hasNext())
+						{
+							Integer id = list2Iter.next();
+							readTokenIDs.add(new TokenAndPort(id, portID));
+						}
+					}
+					else// if (getGraphType().equals(WORKFLOW_RUN_GRAPH_TYPE))
+					{
+						List<Integer> list2 = query.getReadTokensForExecutionAndPortID(_runID, portID);
+						Iterator<Integer> list2Iter = list2.iterator();
+						while (list2Iter.hasNext())
+						{
+							Integer id = list2Iter.next();
+							readTokenIDs.add(new TokenAndPort(id, portID));
+						}
+					}
+				} catch (QueryException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}// while
+		}
+		
 		for (int i=0; i<readTokenIDs.size(); i++)
 		{
 			TokenAndPort r = readTokenIDs.get(i);
@@ -422,29 +466,165 @@ public class DiagnosisGraphPanel extends JPanel
 			if (!e.getValueIsAdjusting())
 			{
 				ListSelectionModel listSelectionModel = (ListSelectionModel) e.getSource();
-				ProvenanceTablePane dTablePane = null;
+				ProvenanceTablePane pTablePane = null;
 				for (int i=0; i<_allTablePanes.size(); i++)
 				{
 					ProvenanceTablePane tmpDTablePane = (ProvenanceTablePane) _allTablePanes.get(i);
 					if (tmpDTablePane.getTablePane().getSelectionModel()==listSelectionModel)
 					{
-						dTablePane = tmpDTablePane;
+						pTablePane = tmpDTablePane;
 						break;
 					}
 				}
-				int idx = dTablePane.getTablePane().getSelectedRow();
-				Integer tokenID = (Integer) dTablePane.getTablePane().getModel().getValueAt(idx, 0);
+				int idx = pTablePane.getTablePane().getSelectedRow();
+				Integer tokenID = (Integer) pTablePane.getTablePane().getModel().getValueAt(idx, 0);
 				
-				calculateDependency(tokenID);
+				calculateDependency(tokenID, pTablePane);
 			}
 		}
 	};
 	
-	void calculateDependency(Integer tokenID)
+	public LinkedList<TokenAndPort> getAllInputTokenIDsForOutputTokenID(Integer writeTokenID)
 	{
-		System.out.println(tokenID);
+		LinkedList<TokenAndPort> allInputTokenIDs = new LinkedList<TokenAndPort>();
 		
+		DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
 		
+		try
+		{
+			Integer fireID = query.getActorFireIDForToken(writeTokenID);
+			allInputTokenIDs = query.getInputTokenIDsForActorFireID(fireID);
+		} catch (QueryException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return allInputTokenIDs;
+	}
+	
+	public ProvenanceTablePane getTablePanesForTokenAndPort(TokenAndPort tokenAndPort)
+	{
+		ProvenanceTablePane pTablePane = null;
+
+		DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
+		try
+		{
+			// get write port name
+			String portName1 = query.getPortNameForTokenID(tokenAndPort.getTokenID());
+			
+			// get write port
+			TypedIOPort port1 = null;
+			for (int i=0; i<_allPorts.size(); i++)
+			{
+				String fullPortName = _allPorts.get(i).getFullName();
+				String entityName = fullPortName.substring(1);
+				int firstDot = entityName.indexOf('.');
+				entityName = entityName.substring(firstDot);
+				
+				if (portName1.equals(entityName))
+				{
+					port1 = _allPorts.get(i);
+					break;
+				}
+			}
+			
+			// get read port name
+			String portName2 = query.getPortNameForPortID(tokenAndPort.getPortID());
+			
+			// get read port
+			TypedIOPort port2 = null;
+			for (int i=0; i<_allPorts.size(); i++)
+			{
+				String fullPortName = _allPorts.get(i).getFullName();
+				String entityName = fullPortName.substring(1);
+				int firstDot = entityName.indexOf('.');
+				entityName = entityName.substring(firstDot);
+				
+				if (portName2.equals(entityName))
+				{
+					port2 = _allPorts.get(i);
+					break;
+				}
+			}
+			
+			// get provenance table pane
+			for (int i=0; i<_allTablePanes.size(); i++)
+			{
+				ProvenanceTablePane oneTablePane = (ProvenanceTablePane) _allTablePanes.get(i);
+				ComponentRelation oneRelation = oneTablePane.getRelation();
+				
+				if (oneRelation.linkedPortList().contains(port1) && oneRelation.linkedPortList().contains(port2))
+				{
+					pTablePane = oneTablePane;
+					break;
+				}
+			}
+		} catch (QueryException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return pTablePane;
+	}
+	
+	public void calculateDependency(Integer tokenID, ProvenanceTablePane pTablePane)
+	{
+		DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
+
+		// 
+		LinkedList<TokenAndPort> allInputTokenIDs = getAllInputTokenIDsForOutputTokenID(tokenID);
+		
+		//
+		LinkedList<ProvenanceTablePane> pTablePanes = new LinkedList<ProvenanceTablePane>();
+		for (int i=0; i<allInputTokenIDs.size(); i++)
+		{
+			ProvenanceTablePane tmpPTablePanes = getTablePanesForTokenAndPort(allInputTokenIDs.get(i));
+			pTablePanes.add(tmpPTablePanes);
+		}
+		LinkedList<ProvenanceTablePane> tmpPTablePanes = new LinkedList<ProvenanceTablePane>();
+		for (int i=0; i<pTablePanes.size(); i++)
+		{
+			if (!tmpPTablePanes.contains(pTablePanes.get(i)))
+			{
+				tmpPTablePanes.add(pTablePanes.get(i));
+			}
+		}
+		pTablePanes = tmpPTablePanes;
+		
+		for (int i=0; i<pTablePanes.size(); i++)
+		{
+			List<Integer> tokenIDs = queryRelationTokenIDs(pTablePanes.get(i).getRelation(), allInputTokenIDs);
+			
+			// set table model(table content data) for this table pane
+			DefaultTableModel tableModel = new DefaultTableModel();
+			Vector<String> columnIdentifiers = new Vector<String>();
+			columnIdentifiers.addElement("id");
+			columnIdentifiers.addElement("data");
+			
+			tableModel.setColumnIdentifiers(columnIdentifiers);
+			if (tokenIDs != null)
+			{
+				for (int j=0; j<tokenIDs.size(); j++)
+				{
+					Integer tmp = tokenIDs.get(j);
+					String tokenValue = "";
+					try
+					{
+						tokenValue = query.getTokenValue(tmp);
+					} catch (QueryException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					Vector<Object> rowData = new Vector<Object>();
+					rowData.addElement(tmp);
+					rowData.addElement(tokenValue);
+					tableModel.addRow(rowData);
+				}// for tokenids
+			}
+			pTablePanes.get(i).setTablePaneModel(tableModel);
+		}// for table panes
 	}
 	
 	public static class Factory
@@ -784,6 +964,8 @@ public class DiagnosisGraphPanel extends JPanel
 	private int _runID;
 	
 	private int _workflowID;
+	
+	private List<TypedIOPort> _allPorts;
 	
 	/** _graphType indicates that this graph panel is a workflow or a workflow run */
 	public final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
