@@ -203,7 +203,7 @@ public class DiagnosisGraphPanel extends JPanel
 				List<Integer> tokenIDs = queryRelationTokenIDs(relation, null);
 				
 				// set table model(table content data) for this table pane
-				DefaultTableModel tableModel = new DefaultTableModel();
+				ProvenanceTableModel tableModel = new ProvenanceTableModel();
 				Vector<String> columnIdentifiers = new Vector<String>();
 				columnIdentifiers.addElement("id");
 				columnIdentifiers.addElement("data");
@@ -479,7 +479,7 @@ public class DiagnosisGraphPanel extends JPanel
 				int idx = pTablePane.getTablePane().getSelectedRow();
 				Integer tokenID = (Integer) pTablePane.getTablePane().getModel().getValueAt(idx, 0);
 				
-				calculateDependency(tokenID, pTablePane);
+				calculateDependency(tokenID);
 			}
 		}
 	};
@@ -568,7 +568,7 @@ public class DiagnosisGraphPanel extends JPanel
 		return pTablePane;
 	}
 	
-	public void calculateDependency(Integer tokenID, ProvenanceTablePane pTablePane)
+	public void calculateDependency(Integer tokenID)
 	{
 		DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
 
@@ -579,8 +579,8 @@ public class DiagnosisGraphPanel extends JPanel
 		LinkedList<ProvenanceTablePane> pTablePanes = new LinkedList<ProvenanceTablePane>();
 		for (int i=0; i<allInputTokenIDs.size(); i++)
 		{
-			ProvenanceTablePane tmpPTablePanes = getTablePanesForTokenAndPort(allInputTokenIDs.get(i));
-			pTablePanes.add(tmpPTablePanes);
+			ProvenanceTablePane tmpPTablePane = getTablePanesForTokenAndPort(allInputTokenIDs.get(i));
+			pTablePanes.add(tmpPTablePane);
 		}
 		LinkedList<ProvenanceTablePane> tmpPTablePanes = new LinkedList<ProvenanceTablePane>();
 		for (int i=0; i<pTablePanes.size(); i++)
@@ -597,7 +597,7 @@ public class DiagnosisGraphPanel extends JPanel
 			List<Integer> tokenIDs = queryRelationTokenIDs(pTablePanes.get(i).getRelation(), allInputTokenIDs);
 			
 			// set table model(table content data) for this table pane
-			DefaultTableModel tableModel = new DefaultTableModel();
+			ProvenanceTableModel tableModel = new ProvenanceTableModel();
 			Vector<String> columnIdentifiers = new Vector<String>();
 			columnIdentifiers.addElement("id");
 			columnIdentifiers.addElement("data");
@@ -624,6 +624,16 @@ public class DiagnosisGraphPanel extends JPanel
 				}// for tokenids
 			}
 			pTablePanes.get(i).setTablePaneModel(tableModel);
+			
+			// recursing dependency for each table pane
+			if (tokenIDs != null)
+			{
+				for (int j=0; j<tokenIDs.size(); j++)
+				{
+					Integer tmp = tokenIDs.get(j);
+					calculateDependency(tmp);
+				}
+			}
 		}// for table panes
 	}
 	
