@@ -19,6 +19,9 @@ import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -216,6 +219,9 @@ public class DiagnosisGraphPanel extends JPanel
 				}
 				tablePane.setTablePaneModel(tableModel);
 				
+				// add list selection listener
+				tablePane.getTablePane().getSelectionModel().addListSelectionListener(_listSelectionListener);
+				
 				// initial location
 				int x = 0, y = 0, width = 100, height = 100;
 				tablePane.setBounds(x, y,  width, height);
@@ -274,6 +280,7 @@ public class DiagnosisGraphPanel extends JPanel
 		while (portsIter.hasNext())
 		{
 			TypedIOPort port = (TypedIOPort) portsIter.next();
+
 			String fullPortName = port.getFullName();
 			Integer portID;
 			
@@ -406,6 +413,38 @@ public class DiagnosisGraphPanel extends JPanel
 			}
 			tablePane.setBounds(x+_xOffset, y+_yOffset,  width, height);
 		}// while iterate all table panes
+	}
+	
+	private ListSelectionListener _listSelectionListener = new ListSelectionListener() 
+	{
+		public void valueChanged(ListSelectionEvent e)
+		{
+			if (!e.getValueIsAdjusting())
+			{
+				ListSelectionModel listSelectionModel = (ListSelectionModel) e.getSource();
+				ProvenanceTablePane dTablePane = null;
+				for (int i=0; i<_allTablePanes.size(); i++)
+				{
+					ProvenanceTablePane tmpDTablePane = (ProvenanceTablePane) _allTablePanes.get(i);
+					if (tmpDTablePane.getTablePane().getSelectionModel()==listSelectionModel)
+					{
+						dTablePane = tmpDTablePane;
+						break;
+					}
+				}
+				int idx = dTablePane.getTablePane().getSelectedRow();
+				Integer tokenID = (Integer) dTablePane.getTablePane().getModel().getValueAt(idx, 0);
+				
+				calculateDependency(tokenID);
+			}
+		}
+	};
+	
+	void calculateDependency(Integer tokenID)
+	{
+		System.out.println(tokenID);
+		
+		
 	}
 	
 	public static class Factory
