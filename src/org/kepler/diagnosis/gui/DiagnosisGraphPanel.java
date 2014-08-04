@@ -472,6 +472,9 @@ public class DiagnosisGraphPanel extends JPanel
 			if (!e.getValueIsAdjusting())
 			{
 				ListSelectionModel listSelectionModel = (ListSelectionModel) e.getSource();
+				if (listSelectionModel.isSelectionEmpty())
+					return ;
+				
 				ProvenanceTablePane pTablePane = null;
 				for (int i=0; i<_allTablePanes.size(); i++)
 				{
