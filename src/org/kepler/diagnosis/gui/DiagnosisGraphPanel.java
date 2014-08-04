@@ -161,7 +161,7 @@ public class DiagnosisGraphPanel extends JPanel
 	{
 		if (_allTablePanes == null)
 		{
-			_allTablePanes = new Vector<JComponent>();
+			_allTablePanes = new LinkedList<ProvenanceTablePane>();
 
 			// collect locatable nodes for actors
 			Vector<Location> locatableNodes = new Vector<Location>();
@@ -245,7 +245,7 @@ public class DiagnosisGraphPanel extends JPanel
 					tc.setCellRenderer(tablePane.new ProvTableCellRenderer());
 				}
 				
-				_allTablePanes.addElement(tablePane);
+				_allTablePanes.add(tablePane);
 				
 				layoutAllTablePanes();
 			}
@@ -280,6 +280,12 @@ public class DiagnosisGraphPanel extends JPanel
 		}
 	}
 	
+	/** Query relation related (a.k.a provenance table pane related) token ids
+	 *  The returned token ids will be displayed in the relation related provenance table pane
+	 *  @param relation The specific relation
+	 *  @param readTokenIDs Token ids for the read port event ids. If it's not null, it won't be calculated
+	 *  @return relation related token ids
+	 *  */
 	public List<Integer> queryRelationTokenIDs(ComponentRelation relation, LinkedList<TokenAndPort> readTokenIDs)
 	{
 		List<?> ports = relation.linkedPortList();
@@ -410,7 +416,7 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	public void layoutAllTablePanes()
 	{
-		Iterator<JComponent> tablePanesIter = _allTablePanes.iterator();
+		Iterator<ProvenanceTablePane> tablePanesIter = _allTablePanes.iterator();
 		// iterate all table panes
 		while (tablePanesIter.hasNext())
 		{
@@ -479,7 +485,11 @@ public class DiagnosisGraphPanel extends JPanel
 				int idx = pTablePane.getTablePane().getSelectedRow();
 				Integer tokenID = (Integer) pTablePane.getTablePane().getModel().getValueAt(idx, 0);
 				
+				_refreshTablePanes = new LinkedList<ProvenanceTablePane>();
+				_refreshTablePanes.addAll(_allTablePanes);
+				_refreshTablePanes.remove(pTablePane);
 				calculateDependency(tokenID);
+				refreshTablePanes();
 			}
 		}
 	};
@@ -572,10 +582,10 @@ public class DiagnosisGraphPanel extends JPanel
 	{
 		DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
 
-		// 
+		// get all actor fire related, input tokens
 		LinkedList<TokenAndPort> allInputTokenIDs = getAllInputTokenIDsForOutputTokenID(tokenID);
 		
-		//
+		// get all provenance table pane that one step preceding
 		LinkedList<ProvenanceTablePane> pTablePanes = new LinkedList<ProvenanceTablePane>();
 		for (int i=0; i<allInputTokenIDs.size(); i++)
 		{
@@ -625,6 +635,12 @@ public class DiagnosisGraphPanel extends JPanel
 			}
 			pTablePanes.get(i).setTablePaneModel(tableModel);
 			
+			// remove this table pane from the need to refresh collection, _refreshTablePanes
+			if (_refreshTablePanes.contains(pTablePanes.get(i)))
+			{
+				_refreshTablePanes.remove(pTablePanes.get(i));
+			}
+			
 			// recursing dependency for each table pane
 			if (tokenIDs != null)
 			{
@@ -635,6 +651,48 @@ public class DiagnosisGraphPanel extends JPanel
 				}
 			}
 		}// for table panes
+	}
+	
+	public void refreshTablePanes()
+	{
+		DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
+
+		for (int i=0; i<_refreshTablePanes.size(); i++)
+		{
+			ProvenanceTablePane pTablePane = _refreshTablePanes.get(i);
+			List<Integer> tokenIDs = queryRelationTokenIDs(pTablePane.getRelation(), null);
+			
+			// set table model(table content data) for this table pane
+			ProvenanceTableModel tableModel = new ProvenanceTableModel();
+			Vector<String> columnIdentifiers = new Vector<String>();
+			columnIdentifiers.addElement("id");
+			columnIdentifiers.addElement("data");
+			
+			tableModel.setColumnIdentifiers(columnIdentifiers);
+			if (tokenIDs != null)
+			{
+				for (int j=0; j<tokenIDs.size(); j++)
+				{
+					Integer tmp = tokenIDs.get(j);
+					String tokenValue = "";
+					try
+					{
+						tokenValue = query.getTokenValue(tmp);
+					} catch (QueryException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					Vector<Object> rowData = new Vector<Object>();
+					rowData.addElement(tmp);
+					rowData.addElement(tokenValue);
+					tableModel.addRow(rowData);
+				}// for tokenids
+			}
+			_refreshTablePanes.get(i).setTablePaneModel(tableModel);
+		}
+		
+		_refreshTablePanes = null;
 	}
 	
 	public static class Factory
@@ -678,7 +736,7 @@ public class DiagnosisGraphPanel extends JPanel
 			
 			// create all table panes after set variables
 			canvasPanel.createAllTablePanes();
-			Iterator<JComponent> tablePanesIter = canvasPanel._allTablePanes.iterator();
+			Iterator<ProvenanceTablePane> tablePanesIter = canvasPanel._allTablePanes.iterator();
 			while (tablePanesIter.hasNext())
 			{
 				JComponent tablePane = tablePanesIter.next();
@@ -732,7 +790,7 @@ public class DiagnosisGraphPanel extends JPanel
 			
 			// create all table panes after set variables
 			canvasPanel.createAllTablePanes();
-			Iterator<JComponent> tablePanesIter = canvasPanel._allTablePanes.iterator();
+			Iterator<ProvenanceTablePane> tablePanesIter = canvasPanel._allTablePanes.iterator();
 			while (tablePanesIter.hasNext())
 			{
 				JComponent tablePane = tablePanesIter.next();
@@ -782,7 +840,7 @@ public class DiagnosisGraphPanel extends JPanel
                 }
                 
                  _xOffset += (int) (visibleRect.getX() - newLeft.getX());
-                Iterator<JComponent> tablePanesIte = _allTablePanes.iterator();
+                Iterator<ProvenanceTablePane> tablePanesIte = _allTablePanes.iterator();
 				while (tablePanesIte.hasNext())
 				{
 					JComponent tablePane = tablePanesIte.next();
@@ -812,7 +870,7 @@ public class DiagnosisGraphPanel extends JPanel
                 }
                 
                 _yOffset += (int) (visibleRect.getY() - newTop.getY());
-                Iterator<JComponent> tablePanesIte = _allTablePanes.iterator();
+                Iterator<ProvenanceTablePane> tablePanesIte = _allTablePanes.iterator();
 				while (tablePanesIte.hasNext())
 				{
 					JComponent tablePane = tablePanesIte.next();
@@ -987,7 +1045,10 @@ public class DiagnosisGraphPanel extends JPanel
 	private JCanvasPanner _graphPanner;
 	
 	/** All table panes that used to display provenance data */
-	private Vector<JComponent> _allTablePanes;
+	private LinkedList<ProvenanceTablePane> _allTablePanes;
+	
+	/** All table panes that will be refreshed */
+	private LinkedList<ProvenanceTablePane> _refreshTablePanes;
 	
 	private JScrollBar _horizontalScrollBar;
 	private ScrollBarListener _horizontalScrollBarListener;
