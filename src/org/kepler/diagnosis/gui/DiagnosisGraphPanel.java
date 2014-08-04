@@ -21,8 +21,9 @@ import javax.swing.JScrollBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 import org.kepler.diagnosis.DiagnosisManager;
 import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
@@ -133,7 +134,6 @@ public class DiagnosisGraphPanel extends JPanel
 				size.setSize(_jgraph);
 		} catch (IllegalActionException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -220,7 +220,6 @@ public class DiagnosisGraphPanel extends JPanel
 							tokenValue = query.getTokenValue(tokenID);
 						} catch (QueryException e)
 						{
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						Vector<Object> rowData = new Vector<Object>();
@@ -242,7 +241,7 @@ public class DiagnosisGraphPanel extends JPanel
 				for (int i=0; i<columnIdentifiers.size(); i++)
 				{
 					TableColumn tc = tablePane.getTablePane().getColumn(columnIdentifiers.get(i));
-					tc.setCellRenderer(tablePane.new ProvTableCellRenderer());
+					tc.setCellRenderer(new ProvenanceTableCellRenderer());
 				}
 				
 				_allTablePanes.add(tablePane);
@@ -333,7 +332,6 @@ public class DiagnosisGraphPanel extends JPanel
 				}
 			} catch (QueryException e)
 			{
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}// while
@@ -379,7 +377,6 @@ public class DiagnosisGraphPanel extends JPanel
 					}
 				} catch (QueryException e)
 				{
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}// while
@@ -475,6 +472,7 @@ public class DiagnosisGraphPanel extends JPanel
 				if (listSelectionModel.isSelectionEmpty())
 					return ;
 				
+				// get the table pane that user operate on
 				ProvenanceTablePane pTablePane = null;
 				for (int i=0; i<_allTablePanes.size(); i++)
 				{
@@ -485,18 +483,40 @@ public class DiagnosisGraphPanel extends JPanel
 						break;
 					}
 				}
+				
+				// get the token id that user select
 				int idx = pTablePane.getTablePane().getSelectedRow();
 				Integer tokenID = (Integer) pTablePane.getTablePane().getModel().getValueAt(idx, 0);
 				
+				// render the selected row
+				LinkedList<Integer> rows = new LinkedList<Integer>();
+				rows.add(idx);
+				TableColumnModel tcm = pTablePane.getTablePane().getColumnModel();
+				for (int k=0; k<tcm.getColumnCount(); k++)
+				{
+					TableColumn tc = tcm.getColumn(k);
+					tc.setCellRenderer(new ProvenanceTableCellRenderer(rows));
+				}
+				pTablePane.getTablePane().repaint();
+				
+				//
+				pTablePane.getTablePane().clearSelection();
+				
+				// prepare all table panes that need to refresh after calculating the dependency
 				_refreshTablePanes = new LinkedList<ProvenanceTablePane>();
 				_refreshTablePanes.addAll(_allTablePanes);
 				_refreshTablePanes.remove(pTablePane);
+				
+				// DEPENDENCY CALCULATING
 				calculateDependency(tokenID);
+				
+				// 
 				refreshTablePanes();
 			}
 		}
 	};
 	
+	/** given write token id, return all actor fire related read token and port */
 	public LinkedList<TokenAndPort> getAllInputTokenIDsForOutputTokenID(Integer writeTokenID)
 	{
 		LinkedList<TokenAndPort> allInputTokenIDs = new LinkedList<TokenAndPort>();
@@ -509,13 +529,15 @@ public class DiagnosisGraphPanel extends JPanel
 			allInputTokenIDs = query.getInputTokenIDsForActorFireID(fireID);
 		} catch (QueryException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		return allInputTokenIDs;
 	}
 	
+	/** get token and port related table pane.
+	 *  @param tokenAndPort Input token and port
+	 **/
 	public ProvenanceTablePane getTablePanesForTokenAndPort(TokenAndPort tokenAndPort)
 	{
 		ProvenanceTablePane pTablePane = null;
@@ -575,7 +597,6 @@ public class DiagnosisGraphPanel extends JPanel
 			}
 		} catch (QueryException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return pTablePane;
@@ -583,8 +604,6 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	public void calculateDependency(Integer tokenID)
 	{
-		DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
-
 		// get all actor fire related, input tokens
 		LinkedList<TokenAndPort> allInputTokenIDs = getAllInputTokenIDsForOutputTokenID(tokenID);
 		
@@ -605,38 +624,33 @@ public class DiagnosisGraphPanel extends JPanel
 		}
 		pTablePanes = tmpPTablePanes;
 		
+		// processes for all the one step preceding dependency table panes
 		for (int i=0; i<pTablePanes.size(); i++)
 		{
 			List<Integer> tokenIDs = queryRelationTokenIDs(pTablePanes.get(i).getRelation(), allInputTokenIDs);
 			
-			// set table model(table content data) for this table pane
-			ProvenanceTableModel tableModel = new ProvenanceTableModel();
-			Vector<String> columnIdentifiers = new Vector<String>();
-			columnIdentifiers.addElement("id");
-			columnIdentifiers.addElement("data");
-			
-			tableModel.setColumnIdentifiers(columnIdentifiers);
+			// collect rows that need to mark with background color
+			LinkedList<Integer> rows = null;
 			if (tokenIDs != null)
 			{
-				for (int j=0; j<tokenIDs.size(); j++)
+				rows = new LinkedList<Integer>();
+				TableModel tm = pTablePanes.get(i).getTablePane().getModel();
+				for (int k=0; k<tm.getRowCount(); k++)
 				{
-					Integer tmp = tokenIDs.get(j);
-					String tokenValue = "";
-					try
+					Integer value = (Integer) tm.getValueAt(k, 0);
+					if (tokenIDs.contains(value))
 					{
-						tokenValue = query.getTokenValue(tmp);
-					} catch (QueryException e)
-					{
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						rows.add((Integer) k);
 					}
-					Vector<Object> rowData = new Vector<Object>();
-					rowData.addElement(tmp);
-					rowData.addElement(tokenValue);
-					tableModel.addRow(rowData);
-				}// for tokenids
+				}
 			}
-			pTablePanes.get(i).setTablePaneModel(tableModel);
+			TableColumnModel tcm = pTablePanes.get(i).getTablePane().getColumnModel();
+			for (int k=0; k<tcm.getColumnCount(); k++)
+			{
+				TableColumn tc = tcm.getColumn(k);
+				tc.setCellRenderer(new ProvenanceTableCellRenderer(rows));
+			}
+			pTablePanes.get(i).repaint();
 			
 			// remove this table pane from the need to refresh collection, _refreshTablePanes
 			if (_refreshTablePanes.contains(pTablePanes.get(i)))
@@ -683,7 +697,6 @@ public class DiagnosisGraphPanel extends JPanel
 						tokenValue = query.getTokenValue(tmp);
 					} catch (QueryException e)
 					{
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					Vector<Object> rowData = new Vector<Object>();
@@ -713,7 +726,6 @@ public class DiagnosisGraphPanel extends JPanel
 				workflowID = query.getWorkflowID(workflowLSID);
 			} catch (QueryException e1)
 			{
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			
@@ -765,7 +777,6 @@ public class DiagnosisGraphPanel extends JPanel
 				runLSID = query.getLastExecutionLSIDForWorkflow(workflowLSID);
 			} catch (Exception e)
 			{
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -897,28 +908,24 @@ public class DiagnosisGraphPanel extends JPanel
 		@Override
 		public void edgeHeadChanged(GraphEvent e)
 		{
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void edgeTailChanged(GraphEvent e)
 		{
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void nodeAdded(GraphEvent e)
 		{
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void nodeRemoved(GraphEvent e)
 		{
-			// TODO Auto-generated method stub
 			
 		}
 
