@@ -47,6 +47,11 @@
 			<class>org.kepler.diagnosis.workflowmanager.gui.WorkflowManagerPanel$Factory
 			</class>
 		</tabPane>
+		<tabPane>
+			<name>Constraints Of Relation</name>
+			<class>org.kepler.diagnosis.gui.ConstraintsOfRelationPanel$Factory
+			</class>
+		</tabPane>
 	</tabPaneFactory>
 
 	<!-- define the viewPane factories to use -->
@@ -123,6 +128,9 @@
 			<name>Diagnosis</name>
 			<viewPaneLocation>
 				<name>NW</name>
+				<tabPane>
+					<name>Constraints Of Relation</name>
+				</tabPane>
 			</viewPaneLocation>
 			<viewPaneLocation>
 				<name>NE</name>
