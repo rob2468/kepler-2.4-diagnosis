@@ -1,7 +1,9 @@
 package org.kepler.diagnosis.gui;
 
 import java.awt.BorderLayout;
+
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -18,6 +20,8 @@ public class ProvenanceTablePane extends JPanel
 {
 	public ProvenanceTablePane()
 	{
+		_titleLabel = new JLabel();
+		
 		_tablePane = new JTable();
 		_tablePane.setSelectionBackground(_tablePane.getBackground());
 		_tablePane.setSelectionForeground(_tablePane.getForeground());
@@ -42,9 +46,22 @@ public class ProvenanceTablePane extends JPanel
 			
 			JScrollPane scrollPane = new JScrollPane(provTablePane.getTablePane());
 			provTablePane.add(scrollPane, BorderLayout.CENTER);
+			
+			provTablePane.add(provTablePane.getTitleLabel(), BorderLayout.NORTH);
+			
 			return provTablePane;
 		}
 	}// Factory
+	
+	public JLabel getTitleLabel()
+	{
+		return _titleLabel;
+	}
+
+	public void setTitleLabel(JLabel _titleLabel)
+	{
+		this._titleLabel = _titleLabel;
+	}
 	
 	public JTable getTablePane()
 	{
@@ -65,7 +82,9 @@ public class ProvenanceTablePane extends JPanel
 	{
 		this._relation = _relation;
 	}
-
+	
+	private JLabel _titleLabel;
+	
 	private JTable _tablePane;
 	
 	private ComponentRelation _relation;

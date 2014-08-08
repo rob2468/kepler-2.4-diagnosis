@@ -199,6 +199,7 @@ public class DiagnosisGraphPanel extends JPanel
 				ProvenanceTablePane.Factory factory = new ProvenanceTablePane.Factory();
 				ProvenanceTablePane tablePane = (ProvenanceTablePane) factory.createProvenanceTablePane();
 				tablePane.setRelation(relation);
+				tablePane.getTitleLabel().setText(relation.getName());
 								
 				List<Integer> tokenIDs = queryRelationTokenIDs(relation, null);
 				
