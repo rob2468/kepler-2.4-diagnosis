@@ -44,6 +44,8 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -185,6 +187,26 @@ public class ViewManager {
 				log.debug("_viewComboBoxes:" + _viewComboBoxes.size());
 		}
 
+		// add tab changed listener to diagnosis graph panels
+		try
+		{
+			ViewPane diagnosisViewPane = getViewPane(parent, "Diagnosis");
+			JTabbedPane tabbedPane = (JTabbedPane) diagnosisViewPane.getLocationContainer("NE");
+			
+			tabbedPane.addChangeListener(new ChangeListener(){
+				@Override
+				public void stateChanged(ChangeEvent e)
+				{
+					DiagnosisGraphPanel canvas = (DiagnosisGraphPanel) tabbedPane.getSelectedComponent();
+					canvas.refreshConstraintsOfRelationPanel();
+				}
+				
+			});
+		} catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public JPanel getViewArea(TableauFrame parent) {

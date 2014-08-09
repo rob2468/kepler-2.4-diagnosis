@@ -18,16 +18,20 @@ import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
 import org.kepler.diagnosis.DiagnosisManager;
 import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
 import org.kepler.diagnosis.workflowmanager.gui.WorkflowRow;
+import org.kepler.gui.TabManager;
 import org.kepler.gui.ViewManager;
 import org.kepler.objectmanager.lsid.KeplerLSID;
 import org.kepler.provenance.QueryException;
@@ -199,6 +203,7 @@ public class DiagnosisGraphPanel extends JPanel
 				ProvenanceTablePane.Factory factory = new ProvenanceTablePane.Factory();
 				ProvenanceTablePane tablePane = (ProvenanceTablePane) factory.createProvenanceTablePane();
 				tablePane.setRelation(relation);
+				//set title for table pane
 				tablePane.getTitleLabel().setText(relation.getName());
 								
 				List<Integer> tokenIDs = queryRelationTokenIDs(relation, null);
@@ -712,6 +717,24 @@ public class DiagnosisGraphPanel extends JPanel
 		_refreshTablePanes = null;
 	}
 	
+	// set contents of the constraints of relation panel, according to this new graph panel
+	public void refreshConstraintsOfRelationPanel()
+	{
+		TabManager tabman = TabManager.getInstance();
+		ConstraintsOfRelationPanel cORPanel= (ConstraintsOfRelationPanel) tabman.getTab(_frame, "Constraints Of Relation");
+		
+		JTree relationTree = cORPanel.getRelationTree();
+		DefaultMutableTreeNode top = new DefaultMutableTreeNode("Top");
+		for (int i=0; i<_allTablePanes.size(); i++)
+		{
+			ProvenanceTablePane tablePane = _allTablePanes.get(i);
+			String relationName = tablePane.getRelation().getName();
+			top.add(new DefaultMutableTreeNode(relationName));
+		}
+		DefaultTreeModel treeModel = new DefaultTreeModel(top);
+		relationTree.setModel(treeModel);
+	}
+	
 	public static class Factory
 	{
 		// create diagnosis graph panel for a single workflow run
@@ -738,7 +761,9 @@ public class DiagnosisGraphPanel extends JPanel
 			{
 				DiagnosisGraphPanel temp = (DiagnosisGraphPanel) canvasPanels.get(i);
 				if (temp.getGraphType().equals(WORKFLOW_RUN_GRAPH_TYPE) && temp.getRunID()==runID)
+				{
 					return temp;
+				}
 			}
 			
 			DiagnosisGraphPanel canvasPanel = new DiagnosisGraphPanel(workflow, frame);
@@ -789,7 +814,9 @@ public class DiagnosisGraphPanel extends JPanel
 			{
 				DiagnosisGraphPanel temp = (DiagnosisGraphPanel) canvasPanels.get(i);
 				if (temp.getGraphType().equals(WORKFLOW_GRAPH_TYPE) && temp.getWorkflowID()==workflowID)
+				{
 					return temp;
+				}
 			}
 			
 			WorkflowRunManagerManager wrmm = WorkflowRunManagerManager.getInstance();
@@ -811,7 +838,7 @@ public class DiagnosisGraphPanel extends JPanel
 				JComponent tablePane = tablePanesIter.next();
 				canvasPanel._jgraph.add(tablePane);
 			}
-			
+						
 			return canvasPanel;
 		}
 	}
