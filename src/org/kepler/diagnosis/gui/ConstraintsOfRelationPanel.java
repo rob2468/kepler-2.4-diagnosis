@@ -7,8 +7,10 @@ import java.awt.event.ActionListener;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -44,23 +46,26 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		relationTree.setShowsRootHandles(true);
 		relationTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		
-		
 		relationTree.addMouseListener(new java.awt.event.MouseAdapter() {
 			public void mousePressed(java.awt.event.MouseEvent evt)
 			{
 				TreePath path = relationTree.getPathForLocation(evt.getX(), evt.getY());
-				if (path.getPathCount()==2)
+				if (path != null)
 				{
-					jTableShowRelationContextMenu(evt);
-				}
-				else
-				{
-					jTableShowConstraintContextMenu(evt);
+					if (path.getPathCount()==2)
+					{
+						jTableShowRelationContextMenu(evt);
+					}
+					else
+					{
+						jTableShowConstraintContextMenu(evt);
+					}
 				}
 			}
 		});
 		
-		add(relationTree, BorderLayout.CENTER);
+		JScrollPane treeView = new JScrollPane(relationTree);
+		add(treeView, BorderLayout.CENTER);
 		setRelationTree(relationTree);
 	}
 	
@@ -103,7 +108,32 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 	
 	public void actionPerformed(ActionEvent e)
 	{
-		
+		DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) _relationTree.getLastSelectedPathComponent();
+		if (e.getActionCommand().equals(ADD_CONSTRAINT))
+		{
+			DefaultTreeModel treeModel = (DefaultTreeModel) _relationTree.getModel();
+			DefaultMutableTreeNode newChildNode = new DefaultMutableTreeNode("new constraint");
+			treeModel.insertNodeInto(newChildNode, selectedNode, selectedNode.getChildCount());
+			
+			_relationTree.scrollPathToVisible(new TreePath(newChildNode.getPath()));
+		}
+		else if (e.getActionCommand().equals(APPLY_CONSTRAINT))
+		{
+			
+		}
+		else if (e.getActionCommand().equals(GOOD_CONSTRAINT))
+		{
+			
+			
+		}
+		else if (e.getActionCommand().equals(BAD_CONSTRAINT))
+		{
+			
+		}
+		else if (e.getActionCommand().equals(CLEAR_CONSTRAINT))
+		{
+			
+		}
 	}
 
 	private void jTableShowRelationContextMenu(java.awt.event.MouseEvent mouseEvent)
