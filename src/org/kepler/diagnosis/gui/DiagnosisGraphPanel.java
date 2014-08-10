@@ -732,6 +732,9 @@ public class DiagnosisGraphPanel extends JPanel
 		TabManager tabman = TabManager.getInstance();
 		ConstraintsOfRelationPanel cORPanel= (ConstraintsOfRelationPanel) tabman.getTab(_frame, "Constraints Of Relation");
 		
+		// set graph panel for constraints of relation panel
+		cORPanel.setGraphPanel(this);
+		
 		JTree relationTree = cORPanel.getRelationTree();
 		DefaultMutableTreeNode top = new DefaultMutableTreeNode("Top");
 		for (int i=0; i<_allTablePanes.size(); i++)
