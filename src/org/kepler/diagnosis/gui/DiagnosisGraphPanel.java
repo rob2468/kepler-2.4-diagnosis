@@ -291,7 +291,7 @@ public class DiagnosisGraphPanel extends JPanel
 	 *  @param readTokenIDs Token ids for the read port event ids. If it's not null, it won't be calculated
 	 *  @return relation related token ids
 	 *  */
-	public List<Integer> queryRelationTokenIDs(ComponentRelation relation, LinkedList<TokenAndPort> readTokenIDs)
+	public LinkedList<Integer> queryRelationTokenIDs(ComponentRelation relation, LinkedList<TokenAndPort> readTokenIDs)
 	{
 		List<?> ports = relation.linkedPortList();
 		Iterator<?> portsIter = ports.iterator();
@@ -491,12 +491,20 @@ public class DiagnosisGraphPanel extends JPanel
 				}
 				
 				// get the token id that user select
-				int idx = pTablePane.getTablePane().getSelectedRow();
-				Integer tokenID = (Integer) pTablePane.getTablePane().getModel().getValueAt(idx, 0);
+				int idxes[] = pTablePane.getTablePane().getSelectedRows();
+				LinkedList<Integer> tokenIDs = new LinkedList<Integer>();
+				for (int i=0; i<pTablePane.getTablePane().getSelectedRowCount(); i++)
+				{
+					Integer tokenID = (Integer) pTablePane.getTablePane().getModel().getValueAt(idxes[i], 0);
+					tokenIDs.add(tokenID);
+				}
 				
 				// render the selected row
 				LinkedList<Integer> rows = new LinkedList<Integer>();
-				rows.add(idx);
+				for (int i=0; i<pTablePane.getTablePane().getSelectedRowCount(); i++)
+				{
+					rows.add(idxes[i]);
+				}
 				TableColumnModel tcm = pTablePane.getTablePane().getColumnModel();
 				for (int k=0; k<tcm.getColumnCount(); k++)
 				{
@@ -514,7 +522,7 @@ public class DiagnosisGraphPanel extends JPanel
 				_refreshTablePanes.remove(pTablePane);
 				
 				// DEPENDENCY CALCULATING
-				calculateDependency(tokenID);
+				calculateDependency(tokenIDs);
 				
 				// 
 				refreshTablePanes();
@@ -608,10 +616,15 @@ public class DiagnosisGraphPanel extends JPanel
 		return pTablePane;
 	}
 	
-	public void calculateDependency(Integer tokenID)
+	public void calculateDependency(LinkedList<Integer> tokenIDs)
 	{
 		// get all actor fire related, input tokens
-		LinkedList<TokenAndPort> allInputTokenIDs = getAllInputTokenIDsForOutputTokenID(tokenID);
+		LinkedList<TokenAndPort> allInputTokenIDs = new LinkedList<TokenAndPort>();
+		for (int i=0; i<tokenIDs.size(); i++)
+		{
+			Integer tokenID = tokenIDs.get(i);
+			allInputTokenIDs.addAll(getAllInputTokenIDsForOutputTokenID(tokenID));
+		}
 		
 		// get all provenance table pane that one step preceding
 		LinkedList<ProvenanceTablePane> pTablePanes = new LinkedList<ProvenanceTablePane>();
@@ -633,18 +646,18 @@ public class DiagnosisGraphPanel extends JPanel
 		// processes for all the one step preceding dependency table panes
 		for (int i=0; i<pTablePanes.size(); i++)
 		{
-			List<Integer> tokenIDs = queryRelationTokenIDs(pTablePanes.get(i).getRelation(), allInputTokenIDs);
+			LinkedList<Integer> localTokenIDs = queryRelationTokenIDs(pTablePanes.get(i).getRelation(), allInputTokenIDs);
 			
 			// collect rows that need to mark with background color
 			LinkedList<Integer> rows = null;
-			if (tokenIDs != null)
+			if (localTokenIDs != null)
 			{
 				rows = new LinkedList<Integer>();
 				TableModel tm = pTablePanes.get(i).getTablePane().getModel();
 				for (int k=0; k<tm.getRowCount(); k++)
 				{
 					Integer value = (Integer) tm.getValueAt(k, 0);
-					if (tokenIDs.contains(value))
+					if (localTokenIDs.contains(value))
 					{
 						rows.add((Integer) k);
 					}
@@ -665,13 +678,9 @@ public class DiagnosisGraphPanel extends JPanel
 			}
 			
 			// recursing dependency for each table pane
-			if (tokenIDs != null)
+			if (localTokenIDs != null)
 			{
-				for (int j=0; j<tokenIDs.size(); j++)
-				{
-					Integer tmp = tokenIDs.get(j);
-					calculateDependency(tmp);
-				}
+				calculateDependency(localTokenIDs);
 			}
 		}// for table panes
 	}
