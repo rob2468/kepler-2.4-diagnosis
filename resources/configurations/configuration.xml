@@ -49,7 +49,7 @@
 		</tabPane>
 		<tabPane>
 			<name>Constraints Of Relation</name>
-			<class>org.kepler.diagnosis.gui.ConstraintsOfRelationPanel$Factory
+			<class>org.kepler.diagnosis.constraintsofrelation.gui.ConstraintsOfRelationPanel$Factory
 			</class>
 		</tabPane>
 	</tabPaneFactory>

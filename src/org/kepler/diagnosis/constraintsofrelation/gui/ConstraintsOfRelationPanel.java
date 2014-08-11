@@ -1,4 +1,4 @@
-package org.kepler.diagnosis.gui;
+package org.kepler.diagnosis.constraintsofrelation.gui;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -9,11 +9,15 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.kepler.diagnosis.constraintsofrelation.ConstraintModel;
+import org.kepler.diagnosis.gui.DiagnosisGraphPanel;
 import org.kepler.gui.TabPane;
 import org.kepler.gui.TabPaneFactory;
 
@@ -46,6 +50,27 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		relationTree.setShowsRootHandles(true);
 		relationTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		
+		// response to select tree node selection
+		relationTree.addTreeSelectionListener(new TreeSelectionListener(){
+
+			@Override
+			public void valueChanged(TreeSelectionEvent e)
+			{
+				DefaultMutableTreeNode node =  (DefaultMutableTreeNode) relationTree.getLastSelectedPathComponent();
+				if (node == null)
+					return;
+				
+				Object nodeInfo = node.getUserObject();
+				if (nodeInfo instanceof ConstraintModel)
+				{
+					ConstraintModel cm = (ConstraintModel) nodeInfo;
+					System.out.println(cm);
+				}
+			}
+			
+		});
+		
+		// response to right click and pop up context menu
 		relationTree.addMouseListener(new java.awt.event.MouseAdapter() {
 			public void mousePressed(java.awt.event.MouseEvent evt)
 			{
@@ -80,11 +105,6 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		_relationPopupMenu.add(_addConstraintMenuItem);
 		
 		// for constraint
-		_applyMenuItem.removeActionListener(this);
-		_applyMenuItem.addActionListener(this);
-		_applyMenuItem.setActionCommand(APPLY_CONSTRAINT);
-		_applyMenuItem.setEnabled(true);
-		
 		_goodMenuItem.removeActionListener(this);
 		_goodMenuItem.addActionListener(this);
 		_goodMenuItem.setActionCommand(GOOD_CONSTRAINT);
@@ -100,7 +120,6 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		_clearMenuItem.setActionCommand(CLEAR_CONSTRAINT);
 		_clearMenuItem.setEnabled(true);
 		
-		_constraintPopupMenu.add(_applyMenuItem);
 		_constraintPopupMenu.add(_goodMenuItem);
 		_constraintPopupMenu.add(_badMenuItem);
 		_constraintPopupMenu.add(_clearMenuItem);
@@ -112,14 +131,11 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		if (e.getActionCommand().equals(ADD_CONSTRAINT))
 		{
 			DefaultTreeModel treeModel = (DefaultTreeModel) _relationTree.getModel();
-			DefaultMutableTreeNode newChildNode = new DefaultMutableTreeNode("new constraint");
+			ConstraintModel cm = new ConstraintModel("new constraint");
+			DefaultMutableTreeNode newChildNode = new DefaultMutableTreeNode(cm);
 			treeModel.insertNodeInto(newChildNode, selectedNode, selectedNode.getChildCount());
 			
 			_relationTree.scrollPathToVisible(new TreePath(newChildNode.getPath()));
-		}
-		else if (e.getActionCommand().equals(APPLY_CONSTRAINT))
-		{
-			
 		}
 		else if (e.getActionCommand().equals(GOOD_CONSTRAINT))
 		{
@@ -199,11 +215,9 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 	
 	// pop up menu for constraints
 	private JPopupMenu _constraintPopupMenu = new JPopupMenu();
-	private static final String APPLY_CONSTRAINT = "Apply";
 	private static final String GOOD_CONSTRAINT = "Good";
 	private static final String BAD_CONSTRAINT = "Bad";
 	private static final String CLEAR_CONSTRAINT = "Clear";
-	private JMenuItem _applyMenuItem = new JMenuItem(APPLY_CONSTRAINT);
 	private JMenuItem _goodMenuItem = new JMenuItem(GOOD_CONSTRAINT);
 	private JMenuItem _badMenuItem = new JMenuItem(BAD_CONSTRAINT);
 	private JMenuItem _clearMenuItem = new JMenuItem(CLEAR_CONSTRAINT);

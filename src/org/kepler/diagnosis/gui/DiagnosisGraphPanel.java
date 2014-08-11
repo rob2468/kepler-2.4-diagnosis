@@ -29,6 +29,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.kepler.diagnosis.DiagnosisManager;
+import org.kepler.diagnosis.constraintsofrelation.gui.ConstraintsOfRelationPanel;
 import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
 import org.kepler.diagnosis.workflowmanager.gui.WorkflowRow;
 import org.kepler.gui.TabManager;
