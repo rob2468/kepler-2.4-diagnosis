@@ -135,12 +135,9 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) _relationTree.getLastSelectedPathComponent();
 		if (e.getActionCommand().equals(ADD_CONSTRAINT))
 		{
-			DefaultTreeModel treeModel = (DefaultTreeModel) _relationTree.getModel();
-			ConstraintModel cm = new ConstraintModel("new constraint");
-			DefaultMutableTreeNode newChildNode = new DefaultMutableTreeNode(cm);
-			treeModel.insertNodeInto(newChildNode, selectedNode, selectedNode.getChildCount());
-			
-			_relationTree.scrollPathToVisible(new TreePath(newChildNode.getPath()));
+			String dialogTitle = "New constraint for " + selectedNode.getUserObject();
+			ConstraintDialog consDialog = new ConstraintDialog(_frame, dialogTitle, this, selectedNode);
+			consDialog.setVisible(true);
 		}
 		else if (e.getActionCommand().equals(GOOD_CONSTRAINT))
 		{

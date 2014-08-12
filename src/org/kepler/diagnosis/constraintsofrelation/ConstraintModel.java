@@ -12,6 +12,12 @@ public class ConstraintModel
 		_name = name;
 	}
 	
+	public ConstraintModel(String name, String constraints)
+	{
+		_name = name;
+		_constraints = constraints;
+	}
+	
 	public String toString()
 	{
 		return _name;
@@ -41,5 +47,5 @@ public class ConstraintModel
 	private String _name = "";
 	
 	// filter conditions
-	private String _constraints = "id==352 || data.equals(\"false\")";
+	private String _constraints = "";
 }
