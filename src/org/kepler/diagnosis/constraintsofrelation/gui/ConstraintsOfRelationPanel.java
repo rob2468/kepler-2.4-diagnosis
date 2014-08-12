@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.ToolTipManager;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -49,6 +50,8 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		relationTree.setRootVisible(false);
 		relationTree.setShowsRootHandles(true);
 		relationTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		relationTree.setCellRenderer(new RelationTreeCellRenderer());
+		ToolTipManager.sharedInstance().registerComponent(relationTree);
 		
 		// response to select tree node selection
 		relationTree.addTreeSelectionListener(new TreeSelectionListener(){
@@ -64,7 +67,9 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 				if (nodeInfo instanceof ConstraintModel)
 				{
 					ConstraintModel cm = (ConstraintModel) nodeInfo;
-					System.out.println(cm);
+					String relationStr = node.getParent().toString();
+					_graphPanel.applyConstraints(cm.getConstraints(), relationStr);
+					
 				}
 			}
 			

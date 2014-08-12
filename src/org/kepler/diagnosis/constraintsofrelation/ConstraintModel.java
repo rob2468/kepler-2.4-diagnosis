@@ -27,6 +27,19 @@ public class ConstraintModel
 		this._name = _name;
 	}
 	
+	public String getConstraints()
+	{
+		return _constraints;
+	}
+
+	public void setConstraints(String _constraints)
+	{
+		this._constraints = _constraints;
+	}
+
+	// display string
 	private String _name = "";
 	
+	// filter conditions
+	private String _constraints = "id==352 || data.equals(\"false\")";
 }

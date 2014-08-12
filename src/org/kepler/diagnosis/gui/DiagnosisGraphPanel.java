@@ -15,6 +15,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
@@ -469,6 +472,80 @@ public class DiagnosisGraphPanel extends JPanel
 		}// while iterate all table panes
 	}
 	
+	public boolean isMeetConstraints(String constraintsStr, Integer id, String data)
+	{
+		ScriptEngineManager manager = new ScriptEngineManager();
+		ScriptEngine engine = manager.getEngineByName("js");
+		engine.put("id", id);
+		engine.put("data", data);
+		Boolean res = false;
+		try
+		{
+			res = (Boolean) engine.eval(constraintsStr);
+		} catch (ScriptException e)
+		{
+			e.printStackTrace();
+		}
+		
+		return res;
+	}
+	// actions for applying constraints
+	public void applyConstraints(String constraintsStr, String relationStr)
+	{
+		if (constraintsStr==null || constraintsStr.equals(""))
+		{
+			return ;
+		}
+		
+		// get the table pane that this constraints correspond to
+		ProvenanceTablePane pTablePane = null;
+		for (int i=0; i<_allTablePanes.size(); i++)
+		{
+			ProvenanceTablePane tmpDTablePane = (ProvenanceTablePane) _allTablePanes.get(i);
+			if (tmpDTablePane.getRelation().getName().equals(relationStr))
+			{
+				pTablePane = tmpDTablePane;
+				break;
+			}
+		}
+		
+		// get the token id according to the constraints		
+		LinkedList<Integer> tokenIDs = new LinkedList<Integer>();
+		LinkedList<Integer> rows = new LinkedList<Integer>();
+		TableModel tm = pTablePane.getTablePane().getModel();
+		for (int i=0; i<tm.getRowCount(); i++)
+		{
+			Integer id = (Integer) tm.getValueAt(i, 0);
+			String data = (String) tm.getValueAt(i, 1);
+			
+			if (isMeetConstraints(constraintsStr, id, data))
+			{
+				tokenIDs.add(id);
+				rows.add(i);
+			}
+		}
+		
+		TableColumnModel tcm = pTablePane.getTablePane().getColumnModel();
+		for (int k=0; k<tcm.getColumnCount(); k++)
+		{
+			TableColumn tc = tcm.getColumn(k);
+			tc.setCellRenderer(new ProvenanceTableCellRenderer(rows));
+		}
+		pTablePane.getTablePane().repaint();
+		
+		// prepare all table panes that need to refresh after calculating the dependency
+		_refreshTablePanes = new LinkedList<ProvenanceTablePane>();
+		_refreshTablePanes.addAll(_allTablePanes);
+		_refreshTablePanes.remove(pTablePane);
+		
+		// DEPENDENCY CALCULATING
+		calculateDependency(tokenIDs);
+		
+		// 
+		refreshTablePanes();
+	}
+	
+	// actions for selecting one row in provenance pane
 	private ListSelectionListener _listSelectionListener = new ListSelectionListener() 
 	{
 		public void valueChanged(ListSelectionEvent e)
@@ -619,6 +696,9 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	public void calculateDependency(LinkedList<Integer> tokenIDs)
 	{
+		if (tokenIDs==null)
+			return ;
+		
 		// get all actor fire related, input tokens
 		LinkedList<TokenAndPort> allInputTokenIDs = new LinkedList<TokenAndPort>();
 		for (int i=0; i<tokenIDs.size(); i++)
