@@ -53,35 +53,38 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		relationTree.setCellRenderer(new RelationTreeCellRenderer());
 		ToolTipManager.sharedInstance().registerComponent(relationTree);
 		
-		// response to select tree node selection
+		// response to tree node selection
 		relationTree.addTreeSelectionListener(new TreeSelectionListener(){
-
 			@Override
 			public void valueChanged(TreeSelectionEvent e)
 			{
-				DefaultMutableTreeNode node =  (DefaultMutableTreeNode) relationTree.getLastSelectedPathComponent();
-				if (node == null)
-					return;
 				
-				Object nodeInfo = node.getUserObject();
-				if (nodeInfo instanceof ConstraintModel)
-				{
-					ConstraintModel cm = (ConstraintModel) nodeInfo;
-					String relationStr = node.getParent().toString();
-					_graphPanel.applyConstraints(cm.getConstraints(), relationStr);
-					
-				}
 			}
-			
 		});
 		
-		// response to right click and pop up context menu
 		relationTree.addMouseListener(new java.awt.event.MouseAdapter() {
 			public void mousePressed(java.awt.event.MouseEvent evt)
 			{
 				TreePath path = relationTree.getPathForLocation(evt.getX(), evt.getY());
 				if (path != null)
 				{
+					// response to select tree node selection
+					if (evt.getClickCount() == 2)
+					{
+						DefaultMutableTreeNode node =  (DefaultMutableTreeNode) relationTree.getLastSelectedPathComponent();
+						if (node == null)
+							return;
+						
+						Object nodeInfo = node.getUserObject();
+						if (nodeInfo instanceof ConstraintModel)
+						{
+							ConstraintModel cm = (ConstraintModel) nodeInfo;
+							String relationStr = node.getParent().toString();
+							_graphPanel.applyConstraints(cm.getConstraints(), relationStr);
+						}
+					}
+					
+					// pop up context menu
 					if (path.getPathCount()==2)
 					{
 						jTableShowRelationContextMenu(evt);
@@ -141,16 +144,21 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		}
 		else if (e.getActionCommand().equals(GOOD_CONSTRAINT))
 		{
-			
-			
+			RelationTreeCellRenderer cellRenderer = (RelationTreeCellRenderer) _relationTree.getCellRenderer();
+			cellRenderer.addGoodNode(selectedNode);
+			_relationTree.repaint();
 		}
 		else if (e.getActionCommand().equals(BAD_CONSTRAINT))
 		{
-			
+			RelationTreeCellRenderer cellRenderer = (RelationTreeCellRenderer) _relationTree.getCellRenderer();
+			cellRenderer.addBadNode(selectedNode);
+			_relationTree.repaint();
 		}
 		else if (e.getActionCommand().equals(CLEAR_CONSTRAINT))
 		{
-			
+			RelationTreeCellRenderer cellRenderer = (RelationTreeCellRenderer) _relationTree.getCellRenderer();
+			cellRenderer.clearNode(selectedNode);
+			_relationTree.repaint();
 		}
 	}
 
