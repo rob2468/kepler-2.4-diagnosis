@@ -32,6 +32,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.kepler.diagnosis.DiagnosisManager;
+import org.kepler.diagnosis.constraintsofrelation.ConstraintTreeModel;
 import org.kepler.diagnosis.constraintsofrelation.gui.ConstraintsOfRelationPanel;
 import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
 import org.kepler.diagnosis.workflowmanager.gui.WorkflowRow;
@@ -815,17 +816,20 @@ public class DiagnosisGraphPanel extends JPanel
 		
 		// set graph panel for constraints of relation panel
 		cORPanel.setGraphPanel(this);
-		
 		JTree relationTree = cORPanel.getRelationTree();
-		DefaultMutableTreeNode top = new DefaultMutableTreeNode("Top");
-		for (int i=0; i<_allTablePanes.size(); i++)
+		
+		if (constraintTreeModel == null)
 		{
-			ProvenanceTablePane tablePane = _allTablePanes.get(i);
-			String relationName = tablePane.getRelation().getName();
-			top.add(new DefaultMutableTreeNode(relationName));
+			DefaultMutableTreeNode top = new DefaultMutableTreeNode("Top");
+			for (int i=0; i<_allTablePanes.size(); i++)
+			{
+				ProvenanceTablePane tablePane = _allTablePanes.get(i);
+				String relationName = tablePane.getRelation().getName();
+				top.add(new DefaultMutableTreeNode(relationName));
+			}
+			constraintTreeModel = new ConstraintTreeModel(top);
 		}
-		DefaultTreeModel treeModel = new DefaultTreeModel(top);
-		relationTree.setModel(treeModel);
+		relationTree.setModel(constraintTreeModel);
 	}
 	
 	public static class Factory
@@ -1148,6 +1152,14 @@ public class DiagnosisGraphPanel extends JPanel
 		this._workflowLSID = _workflowLSID;
 	}
 	
+	public ConstraintTreeModel getConstraintTreeModel() {
+		return constraintTreeModel;
+	}
+
+	public void setConstraintTreeModel(ConstraintTreeModel constraintTreeModel) {
+		this.constraintTreeModel = constraintTreeModel;
+	}
+
 	private String _title;
 
 	private TableauFrame _frame;
@@ -1192,4 +1204,6 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	private ChangeListener _localListener = new ChangeListener();
 	
+	// each graph panel has a corresponding constraint tree model
+	private ConstraintTreeModel constraintTreeModel;
 }
