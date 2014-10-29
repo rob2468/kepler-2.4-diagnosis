@@ -32,6 +32,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.kepler.diagnosis.DiagnosisManager;
+import org.kepler.diagnosis.constraintsofrelation.ConstraintMutableTreeNode;
 import org.kepler.diagnosis.constraintsofrelation.ConstraintTreeModel;
 import org.kepler.diagnosis.constraintsofrelation.gui.ConstraintsOfRelationPanel;
 import org.kepler.diagnosis.sql.DiagnosisSQLQuery;
@@ -820,12 +821,12 @@ public class DiagnosisGraphPanel extends JPanel
 		
 		if (constraintTreeModel == null)
 		{
-			DefaultMutableTreeNode top = new DefaultMutableTreeNode("Top");
+			ConstraintMutableTreeNode top = new ConstraintMutableTreeNode("Top");
 			for (int i=0; i<_allTablePanes.size(); i++)
 			{
 				ProvenanceTablePane tablePane = _allTablePanes.get(i);
 				String relationName = tablePane.getRelation().getName();
-				top.add(new DefaultMutableTreeNode(relationName));
+				top.add(new ConstraintMutableTreeNode(relationName));
 			}
 			constraintTreeModel = new ConstraintTreeModel(top);
 		}

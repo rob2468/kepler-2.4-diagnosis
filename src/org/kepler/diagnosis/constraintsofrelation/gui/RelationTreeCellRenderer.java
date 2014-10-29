@@ -9,6 +9,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
 import org.kepler.diagnosis.constraintsofrelation.ConstraintModel;
+import org.kepler.diagnosis.constraintsofrelation.ConstraintMutableTreeNode;
+import org.kepler.diagnosis.constraintsofrelation.ConstraintMutableTreeNode.NodeStates;
 
 public class RelationTreeCellRenderer extends DefaultTreeCellRenderer
 {
@@ -35,7 +37,7 @@ public class RelationTreeCellRenderer extends DefaultTreeCellRenderer
 	{
 		super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 		
-		DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+		ConstraintMutableTreeNode node = (ConstraintMutableTreeNode) value;
 		Object userObject = node.getUserObject();
 		setToolTipText(null);
 		if (userObject instanceof ConstraintModel)
@@ -44,79 +46,15 @@ public class RelationTreeCellRenderer extends DefaultTreeCellRenderer
 		}
 		
 		setBackground(null);
-		if (_goodNodes.contains(node))
+		if (node.getState() == NodeStates.GOOD)
 		{
 			setBackground(Color.GREEN);
 		}
-		else if (_badNodes.contains(node))
+		else if (node.getState() == NodeStates.BAD)
 		{
 			setBackground(Color.RED);
 		}
 		
 		return this;
-		
 	}
-	
-	public boolean addGoodNode(DefaultMutableTreeNode node)
-	{
-		if (_goodNodes.contains(node))
-		{
-			return false;
-		}
-		else
-		{
-			removeBadNode(node);
-			_goodNodes.add(node);
-			return true;
-		}
-	}
-	
-	public boolean removeGoodNode(DefaultMutableTreeNode node)
-	{
-		if (_goodNodes.contains(node))
-		{
-			_goodNodes.remove(node);
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	public boolean addBadNode(DefaultMutableTreeNode node)
-	{
-		if (_badNodes.contains(node))
-		{
-			return false;
-		}
-		else
-		{
-			removeGoodNode(node);
-			_badNodes.add(node);
-			return true;
-		}
-	}
-	
-	public boolean removeBadNode(DefaultMutableTreeNode node)
-	{
-		if (_badNodes.contains(node))
-		{
-			_badNodes.remove(node);
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	public void clearNode(DefaultMutableTreeNode node)
-	{
-		_goodNodes.remove(node);
-		_badNodes.remove(node);
-	}
-	
-	private LinkedList<DefaultMutableTreeNode> _goodNodes = new LinkedList<DefaultMutableTreeNode>();
-	private LinkedList<DefaultMutableTreeNode> _badNodes = new LinkedList<DefaultMutableTreeNode>();
 }

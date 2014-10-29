@@ -17,12 +17,14 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
 import org.kepler.diagnosis.constraintsofrelation.ConstraintModel;
+import org.kepler.diagnosis.constraintsofrelation.ConstraintMutableTreeNode;
+import org.kepler.diagnosis.constraintsofrelation.ConstraintTreeModel;
 
 import com.google.common.collect.Constraints;
 
 public class ConstraintDialog extends JDialog
 {
-	public ConstraintDialog(JFrame owner, String title, ConstraintsOfRelationPanel consOfRelationPanel, DefaultMutableTreeNode selectedNode)
+	public ConstraintDialog(JFrame owner, String title, ConstraintsOfRelationPanel consOfRelationPanel, ConstraintMutableTreeNode selectedNode)
 	{
 		super(owner, title, true);
 		
@@ -54,10 +56,10 @@ public class ConstraintDialog extends JDialog
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				DefaultMutableTreeNode selectedNode = ConstraintDialog.this.getSelectedNode();
+				ConstraintMutableTreeNode selectedNode = ConstraintDialog.this.getSelectedNode();
 				ConstraintsOfRelationPanel cons = ConstraintDialog.this.getConsOfRelationPanel();
 				JTree relationTree = cons.getRelationTree();
-				DefaultTreeModel treeModel = (DefaultTreeModel) relationTree.getModel();
+				ConstraintTreeModel treeModel = (ConstraintTreeModel) relationTree.getModel();
 				
 				String nameStr = _displayNameTextField.getText();
 				nameStr = nameStr.trim();
@@ -68,7 +70,7 @@ public class ConstraintDialog extends JDialog
 				{
 					ConstraintModel cm = new ConstraintModel(nameStr, constraintStr);
 					
-					DefaultMutableTreeNode newChildNode = new DefaultMutableTreeNode(cm);
+					ConstraintMutableTreeNode newChildNode = new ConstraintMutableTreeNode(cm);
 					treeModel.insertNodeInto(newChildNode, selectedNode, selectedNode.getChildCount());
 					
 					relationTree.scrollPathToVisible(new TreePath(newChildNode.getPath()));
@@ -119,12 +121,12 @@ public class ConstraintDialog extends JDialog
 		this._consOfRelationPanel = _consOfRelationPanel;
 	}
 	
-	public DefaultMutableTreeNode getSelectedNode()
+	public ConstraintMutableTreeNode getSelectedNode()
 	{
 		return _selectedNode;
 	}
 	
-	public void setSelectedNode(DefaultMutableTreeNode _selectedNode)
+	public void setSelectedNode(ConstraintMutableTreeNode _selectedNode)
 	{
 		this._selectedNode = _selectedNode;
 	}
@@ -136,6 +138,6 @@ public class ConstraintDialog extends JDialog
 	private JButton _cancelButton;
 	
 	private ConstraintsOfRelationPanel _consOfRelationPanel;
-	private DefaultMutableTreeNode _selectedNode;
+	private ConstraintMutableTreeNode _selectedNode;
 	
 }

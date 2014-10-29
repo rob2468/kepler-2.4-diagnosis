@@ -18,6 +18,8 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.kepler.diagnosis.constraintsofrelation.ConstraintModel;
+import org.kepler.diagnosis.constraintsofrelation.ConstraintMutableTreeNode;
+import org.kepler.diagnosis.constraintsofrelation.ConstraintMutableTreeNode.NodeStates;
 import org.kepler.diagnosis.gui.DiagnosisGraphPanel;
 import org.kepler.gui.TabPane;
 import org.kepler.gui.TabPaneFactory;
@@ -71,7 +73,7 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 					// response to select tree node selection
 					if (evt.getClickCount() == 2)
 					{
-						DefaultMutableTreeNode node =  (DefaultMutableTreeNode) relationTree.getLastSelectedPathComponent();
+						ConstraintMutableTreeNode node =  (ConstraintMutableTreeNode) relationTree.getLastSelectedPathComponent();
 						if (node == null)
 							return;
 						
@@ -84,6 +86,7 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 						}
 					}
 					
+					pointedTreeNode = (ConstraintMutableTreeNode) path.getLastPathComponent();
 					// pop up context menu
 					if (path.getPathCount()==2)
 					{
@@ -135,29 +138,25 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 	
 	public void actionPerformed(ActionEvent e)
 	{
-		DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) _relationTree.getLastSelectedPathComponent();
 		if (e.getActionCommand().equals(ADD_CONSTRAINT))
 		{
-			String dialogTitle = "New constraint for " + selectedNode.getUserObject();
-			ConstraintDialog consDialog = new ConstraintDialog(_frame, dialogTitle, this, selectedNode);
+			String dialogTitle = "New constraint for " + pointedTreeNode.getUserObject();
+			ConstraintDialog consDialog = new ConstraintDialog(_frame, dialogTitle, this, pointedTreeNode);
 			consDialog.setVisible(true);
 		}
 		else if (e.getActionCommand().equals(GOOD_CONSTRAINT))
 		{
-			RelationTreeCellRenderer cellRenderer = (RelationTreeCellRenderer) _relationTree.getCellRenderer();
-			cellRenderer.addGoodNode(selectedNode);
+			pointedTreeNode.setState(NodeStates.GOOD);
 			_relationTree.repaint();
 		}
 		else if (e.getActionCommand().equals(BAD_CONSTRAINT))
 		{
-			RelationTreeCellRenderer cellRenderer = (RelationTreeCellRenderer) _relationTree.getCellRenderer();
-			cellRenderer.addBadNode(selectedNode);
+			pointedTreeNode.setState(NodeStates.BAD);
 			_relationTree.repaint();
 		}
 		else if (e.getActionCommand().equals(CLEAR_CONSTRAINT))
 		{
-			RelationTreeCellRenderer cellRenderer = (RelationTreeCellRenderer) _relationTree.getCellRenderer();
-			cellRenderer.clearNode(selectedNode);
+			pointedTreeNode.setState(NodeStates.CLEAR);
 			_relationTree.repaint();
 		}
 	}
@@ -233,6 +232,10 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 	private JMenuItem _clearMenuItem = new JMenuItem(CLEAR_CONSTRAINT);
 	
 	private DiagnosisGraphPanel _graphPanel;
+	
+	// save the tree node that mouse pointing to
+	// to solve the problem that the selected node isn't the same with the pointed node
+	private ConstraintMutableTreeNode pointedTreeNode;
 	
 	public static class Factory extends TabPaneFactory
 	{
