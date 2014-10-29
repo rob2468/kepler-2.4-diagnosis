@@ -45,6 +45,7 @@ public class ProvenanceTablePane extends JPanel
 			provTablePane.setLayout(new BorderLayout());
 			
 			JScrollPane scrollPane = new JScrollPane(provTablePane.getTablePane());
+			provTablePane.getTablePane().setFillsViewportHeight(true);
 			provTablePane.add(scrollPane, BorderLayout.CENTER);
 			
 			provTablePane.add(provTablePane.getTitleLabel(), BorderLayout.NORTH);

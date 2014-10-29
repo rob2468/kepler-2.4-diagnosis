@@ -234,9 +234,7 @@ public class DiagnosisGraphPanel extends JPanel
 						{
 							e.printStackTrace();
 						}
-						Vector<Object> rowData = new Vector<Object>();
-						rowData.addElement(tokenID);
-						rowData.addElement(tokenValue);
+						ProvenanceTableRow rowData = new ProvenanceTableRow(tokenID, tokenValue);
 						tableModel.addRow(rowData);
 					}
 				}
