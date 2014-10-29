@@ -21,6 +21,7 @@ import javax.script.ScriptException;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
@@ -578,16 +579,12 @@ public class DiagnosisGraphPanel extends JPanel
 				}
 				
 				// render the selected row
-				LinkedList<Integer> rows = new LinkedList<Integer>();
+				ProvenanceTableModel tableModel = (ProvenanceTableModel) pTablePane.getTablePane().getModel();
 				for (int i=0; i<pTablePane.getTablePane().getSelectedRowCount(); i++)
 				{
-					rows.add(idxes[i]);
-				}
-				TableColumnModel tcm = pTablePane.getTablePane().getColumnModel();
-				for (int k=0; k<tcm.getColumnCount(); k++)
-				{
-					TableColumn tc = tcm.getColumn(k);
-					tc.setCellRenderer(new ProvenanceTableCellRenderer(rows));
+					int row = pTablePane.getTablePane().convertRowIndexToModel(idxes[i]);
+					ProvenanceTableRow tableRow = tableModel.getTableRowAt(row);
+					tableRow.setSus(1);
 				}
 				pTablePane.getTablePane().repaint();
 				
@@ -730,25 +727,19 @@ public class DiagnosisGraphPanel extends JPanel
 			LinkedList<Integer> localTokenIDs = queryRelationTokenIDs(pTablePanes.get(i).getRelation(), allInputTokenIDs);
 			
 			// collect rows that need to mark with background color
-			LinkedList<Integer> rows = null;
 			if (localTokenIDs != null)
 			{
-				rows = new LinkedList<Integer>();
-				TableModel tm = pTablePanes.get(i).getTablePane().getModel();
-				for (int k=0; k<tm.getRowCount(); k++)
+				ProvenanceTableModel tableModel = (ProvenanceTableModel) pTablePanes.get(i).getTablePane().getModel();
+				for (int k=0; k<tableModel.getRowCount(); k++)
 				{
-					Integer value = (Integer) tm.getValueAt(k, 0);
+					Integer value = (Integer) tableModel.getValueAt(k, 0);
 					if (localTokenIDs.contains(value))
 					{
-						rows.add((Integer) k);
+						int row = pTablePanes.get(i).getTablePane().convertRowIndexToModel(k);
+						ProvenanceTableRow tableRow = tableModel.getTableRowAt(row);
+						tableRow.setSus(1);
 					}
 				}
-			}
-			TableColumnModel tcm = pTablePanes.get(i).getTablePane().getColumnModel();
-			for (int k=0; k<tcm.getColumnCount(); k++)
-			{
-				TableColumn tc = tcm.getColumn(k);
-				tc.setCellRenderer(new ProvenanceTableCellRenderer(rows));
 			}
 			pTablePanes.get(i).repaint();
 			

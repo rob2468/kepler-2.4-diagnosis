@@ -26,20 +26,21 @@ public class ProvenanceTableCellRenderer extends DefaultTableCellRenderer
 	public Component getTableCellRendererComponent(JTable table,
 			Object value, boolean isSelected, boolean hasFocus, int row,
 			int column)
-	{
-		JLabel jl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+	{		
+		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+		setToolTipText(getText());
 		
-		jl.setBackground(Color.white);
-		if (_rows != null)
+		// retrieve the corresponding table row to judge whether this is a suspicious token
+		ProvenanceTableModel tableModel = (ProvenanceTableModel)table.getModel();
+		int modelRow = table.convertRowIndexToModel(row);
+		ProvenanceTableRow tableRow = tableModel.getTableRowAt(modelRow);
+		
+		setBackground(Color.white);
+		if (tableRow.getSus() == 1)
 		{
-			if (_rows.contains(row))
-			{
-				jl.setBackground(Color.cyan);
-			}
+			setBackground(Color.RED);
 		}
 		
-		jl.setToolTipText(jl.getText());
-		
-		return jl;
+		return this;
 	}
 }

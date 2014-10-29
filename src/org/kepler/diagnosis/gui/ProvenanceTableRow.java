@@ -31,6 +31,16 @@ public class ProvenanceTableRow {
 		this._tokenValue = _tokenValue;
 	}
 
+	public Integer getSus() {
+		return sus;
+	}
+
+	public void setSus(Integer sus) {
+		this.sus = sus;
+	}
+
 	private Integer _tokenID;
 	private String _tokenValue;
+	
+	private Integer sus = 0;
 }
