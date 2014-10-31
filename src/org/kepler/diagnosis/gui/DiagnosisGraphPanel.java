@@ -530,20 +530,12 @@ public class DiagnosisGraphPanel extends JPanel
 		for (int k=0; k<tcm.getColumnCount(); k++)
 		{
 			TableColumn tc = tcm.getColumn(k);
-			tc.setCellRenderer(new ProvenanceTableCellRenderer(rows));
+			tc.setCellRenderer(new ProvenanceTableCellRenderer());
 		}
 		pTablePane.getTablePane().repaint();
 		
-		// prepare all table panes that need to refresh after calculating the dependency
-		_refreshTablePanes = new LinkedList<ProvenanceTablePane>();
-		_refreshTablePanes.addAll(_allTablePanes);
-		_refreshTablePanes.remove(pTablePane);
-		
 		// DEPENDENCY CALCULATING
 		calculateDependency(tokenIDs);
-		
-		// 
-		refreshTablePanes();
 	}
 	
 	// actions for selecting one row in provenance pane
@@ -591,19 +583,11 @@ public class DiagnosisGraphPanel extends JPanel
 				//
 				pTablePane.getTablePane().clearSelection();
 				
-				// prepare all table panes that need to refresh after calculating the dependency
-				_refreshTablePanes = new LinkedList<ProvenanceTablePane>();
-				_refreshTablePanes.addAll(_allTablePanes);
-				_refreshTablePanes.remove(pTablePane);
-				
 				// DEPENDENCY CALCULATING
 				calculateDependency(tokenIDs);
 				
 				normalizeTokenSusValues();
 				repaintAllProvenanceTables();
-				
-				// 
-				refreshTablePanes();
 			}
 		}
 	};
@@ -746,59 +730,12 @@ public class DiagnosisGraphPanel extends JPanel
 			}
 			pTablePanes.get(i).repaint();
 			
-			// remove this table pane from the need to refresh collection, _refreshTablePanes
-			if (_refreshTablePanes.contains(pTablePanes.get(i)))
-			{
-				_refreshTablePanes.remove(pTablePanes.get(i));
-			}
-			
 			// recursing dependency for each table pane
 			if (localTokenIDs != null)
 			{
 				calculateDependency(localTokenIDs);
 			}
 		}// for table panes
-	}
-	
-	public void refreshTablePanes()
-	{
-		DiagnosisSQLQuery query = (DiagnosisSQLQuery) DiagnosisManager.getInstance().getQueryable();
-
-		for (int i=0; i<_refreshTablePanes.size(); i++)
-		{
-			ProvenanceTablePane pTablePane = _refreshTablePanes.get(i);
-			List<Integer> tokenIDs = queryRelationTokenIDs(pTablePane.getRelation(), null);
-			
-			// set table model(table content data) for this table pane
-			ProvenanceTableModel tableModel = new ProvenanceTableModel();
-			Vector<String> columnIdentifiers = new Vector<String>();
-			columnIdentifiers.addElement("id");
-			columnIdentifiers.addElement("data");
-			
-			tableModel.setColumnIdentifiers(columnIdentifiers);
-			if (tokenIDs != null)
-			{
-				for (int j=0; j<tokenIDs.size(); j++)
-				{
-					Integer tmp = tokenIDs.get(j);
-					String tokenValue = "";
-					try
-					{
-						tokenValue = query.getTokenValue(tmp);
-					} catch (QueryException e)
-					{
-						e.printStackTrace();
-					}
-					Vector<Object> rowData = new Vector<Object>();
-					rowData.addElement(tmp);
-					rowData.addElement(tokenValue);
-					tableModel.addRow(rowData);
-				}// for tokenids
-			}
-			_refreshTablePanes.get(i).setTablePaneModel(tableModel);
-		}
-		
-		_refreshTablePanes = null;
 	}
 	
 	private void normalizeTokenSusValues()
@@ -1210,10 +1147,7 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	/** All table panes that used to display provenance data */
 	private LinkedList<ProvenanceTablePane> _allTablePanes;
-	
-	/** All table panes that will be refreshed */
-	private LinkedList<ProvenanceTablePane> _refreshTablePanes;
-	
+		
 	private JScrollBar _horizontalScrollBar;
 	private ScrollBarListener _horizontalScrollBarListener;
 	

@@ -9,17 +9,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 public class ProvenanceTableCellRenderer extends DefaultTableCellRenderer
 {
-	/** table row matching _tokenIDs needs specific background color */
-	private LinkedList<Integer> _rows;
 	
 	public ProvenanceTableCellRenderer()
 	{
-		setOpaque(true);
-	}
-	
-	public ProvenanceTableCellRenderer(LinkedList<Integer> rows)
-	{
-		_rows = rows;
 		setOpaque(true);
 	}
 	
