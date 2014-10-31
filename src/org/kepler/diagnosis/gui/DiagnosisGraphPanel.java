@@ -512,30 +512,26 @@ public class DiagnosisGraphPanel extends JPanel
 		
 		// get the token id according to the constraints		
 		LinkedList<Integer> tokenIDs = new LinkedList<Integer>();
-		LinkedList<Integer> rows = new LinkedList<Integer>();
-		TableModel tm = pTablePane.getTablePane().getModel();
-		for (int i=0; i<tm.getRowCount(); i++)
+		ProvenanceTableModel tableModel = (ProvenanceTableModel) pTablePane.getTablePane().getModel();
+		for (int i=0; i<tableModel.getRowCount(); i++)
 		{
-			Integer id = (Integer) tm.getValueAt(i, 0);
-			String data = (String) tm.getValueAt(i, 1);
+			Integer id = (Integer) tableModel.getValueAt(i, 0);
+			String data = (String) tableModel.getValueAt(i, 1);
 			
 			if (isMeetConstraints(constraintsStr, id, data))
 			{
 				tokenIDs.add(id);
-				rows.add(i);
+				
+				ProvenanceTableRow tableRow = tableModel.getTableRowAt(i);
+				tableRow.setSus(tableRow.getSus()+1);
 			}
 		}
 		
-		TableColumnModel tcm = pTablePane.getTablePane().getColumnModel();
-		for (int k=0; k<tcm.getColumnCount(); k++)
-		{
-			TableColumn tc = tcm.getColumn(k);
-			tc.setCellRenderer(new ProvenanceTableCellRenderer());
-		}
-		pTablePane.getTablePane().repaint();
-		
 		// DEPENDENCY CALCULATING
 		calculateDependency(tokenIDs);
+		
+		normalizeTokenSusValues();
+		repaintAllProvenanceTables();
 	}
 	
 	// actions for selecting one row in provenance pane
@@ -578,8 +574,6 @@ public class DiagnosisGraphPanel extends JPanel
 					ProvenanceTableRow tableRow = tableModel.getTableRowAt(row);
 					tableRow.setSus(tableRow.getSus()+1);
 				}
-				pTablePane.getTablePane().repaint();
-				
 				//
 				pTablePane.getTablePane().clearSelection();
 				
