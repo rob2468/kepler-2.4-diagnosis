@@ -584,7 +584,7 @@ public class DiagnosisGraphPanel extends JPanel
 				{
 					int row = pTablePane.getTablePane().convertRowIndexToModel(idxes[i]);
 					ProvenanceTableRow tableRow = tableModel.getTableRowAt(row);
-					tableRow.setSus(1);
+					tableRow.setSus(tableRow.getSus()+1);
 				}
 				pTablePane.getTablePane().repaint();
 				
@@ -598,6 +598,9 @@ public class DiagnosisGraphPanel extends JPanel
 				
 				// DEPENDENCY CALCULATING
 				calculateDependency(tokenIDs);
+				
+				normalizeTokenSusValues();
+				repaintAllProvenanceTables();
 				
 				// 
 				refreshTablePanes();
@@ -737,7 +740,7 @@ public class DiagnosisGraphPanel extends JPanel
 					{
 						int row = pTablePanes.get(i).getTablePane().convertRowIndexToModel(k);
 						ProvenanceTableRow tableRow = tableModel.getTableRowAt(row);
-						tableRow.setSus(1);
+						tableRow.setSus(tableRow.getSus()+1);
 					}
 				}
 			}
@@ -796,6 +799,34 @@ public class DiagnosisGraphPanel extends JPanel
 		}
 		
 		_refreshTablePanes = null;
+	}
+	
+	private void normalizeTokenSusValues()
+	{
+		int maxSus = 0;
+		for (int i=0; i<_allTablePanes.size(); i++)
+		{
+			ProvenanceTableModel tableModel = (ProvenanceTableModel) _allTablePanes.get(i).getTablePane().getModel();
+			int tableMaxSus = tableModel.getMaxSusValue();
+			if (tableMaxSus > maxSus)
+			{
+				maxSus = tableMaxSus;
+			}
+		}
+		
+		for (int i=0; i<_allTablePanes.size(); i++)
+		{
+			ProvenanceTableModel tableModel = (ProvenanceTableModel) _allTablePanes.get(i).getTablePane().getModel();
+			tableModel.normalizeSusValuesAccordingTo(maxSus);
+		}
+	}
+	
+	private void repaintAllProvenanceTables()
+	{
+		for (int i=0; i<_allTablePanes.size(); i++)
+		{
+			_allTablePanes.get(i).repaint();
+		}
 	}
 	
 	// set contents of the constraints of relation panel, according to this new graph panel

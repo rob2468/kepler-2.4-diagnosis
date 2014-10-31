@@ -22,6 +22,19 @@ public class ProvenanceTableModel extends DefaultTableModel
 		return data.get(row);
 	}
 	
+	public int getMaxSusValue()
+	{
+		int res = 0;
+		for(int i=0; i<data.size(); i++)
+		{
+			if(data.get(i).getSus() > res)
+			{
+				res = data.get(i).getSus();
+			}
+		}
+		return res;
+	}
+	
 	public boolean isCellEditable(int rowIndex, int columnIndex)
 	{
 		return false;
@@ -34,6 +47,15 @@ public class ProvenanceTableModel extends DefaultTableModel
 	public void setData(Vector<ProvenanceTableRow> data) {
 		this.data = data;
 	}
+	
+	public void normalizeSusValuesAccordingTo(int maxSus)
+	{
+		for (int i=0; i<data.size(); i++)
+		{
+			data.get(i).setVal((float)data.get(i).getSus()/(float)maxSus);
+		}
+	}
 
+	// data: used to stored custom structured provenance data
 	private Vector<ProvenanceTableRow> data = new Vector<ProvenanceTableRow>();
 }

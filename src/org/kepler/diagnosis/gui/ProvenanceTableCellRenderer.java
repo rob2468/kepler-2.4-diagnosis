@@ -36,9 +36,9 @@ public class ProvenanceTableCellRenderer extends DefaultTableCellRenderer
 		ProvenanceTableRow tableRow = tableModel.getTableRowAt(modelRow);
 		
 		setBackground(Color.white);
-		if (tableRow.getSus() == 1)
+		if (tableRow.getSus() != 0)
 		{
-			setBackground(Color.RED);
+			setBackground(new Color(1, 0, 0, tableRow.getVal()));
 		}
 		
 		return this;
