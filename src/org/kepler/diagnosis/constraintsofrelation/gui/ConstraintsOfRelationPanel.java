@@ -70,6 +70,7 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 				TreePath path = relationTree.getPathForLocation(evt.getX(), evt.getY());
 				if (path != null)
 				{
+					/*
 					// response to select tree node selection
 					if (evt.getClickCount() == 2)
 					{
@@ -82,10 +83,10 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 						{
 							ConstraintModel cm = (ConstraintModel) nodeInfo;
 							String relationStr = node.getParent().toString();
-							_graphPanel.applyConstraints(cm.getConstraints(), relationStr);
+							_graphPanel.applyConstraintsAndAddSus(cm.getConstraints(), relationStr, true);
 						}
 					}
-					
+					*/
 					pointedTreeNode = (ConstraintMutableTreeNode) path.getLastPathComponent();
 					// pop up context menu
 					if (path.getPathCount()==2)
@@ -148,16 +149,40 @@ public class ConstraintsOfRelationPanel extends JPanel implements TabPane, Actio
 		{
 			pointedTreeNode.setState(NodeStates.GOOD);
 			_relationTree.repaint();
+			
+			System.out.println("not implemented, do nothing except rendering the color");
 		}
 		else if (e.getActionCommand().equals(BAD_CONSTRAINT))
 		{
-			pointedTreeNode.setState(NodeStates.BAD);
-			_relationTree.repaint();
+			if (pointedTreeNode.getState() != NodeStates.BAD)
+			{			
+				pointedTreeNode.setState(NodeStates.BAD);
+				_relationTree.repaint();
+				
+				Object nodeInfo = pointedTreeNode.getUserObject();
+				if (nodeInfo instanceof ConstraintModel)
+				{
+					ConstraintModel cm = (ConstraintModel) nodeInfo;
+					String relationStr = pointedTreeNode.getParent().toString();
+					_graphPanel.applyConstraintsAndAddSus(cm.getConstraints(), relationStr, true);
+				}
+			}
 		}
 		else if (e.getActionCommand().equals(CLEAR_CONSTRAINT))
 		{
-			pointedTreeNode.setState(NodeStates.CLEAR);
-			_relationTree.repaint();
+			if (pointedTreeNode.getState() != NodeStates.CLEAR)
+			{
+				pointedTreeNode.setState(NodeStates.CLEAR);
+				_relationTree.repaint();
+				
+				Object nodeInfo = pointedTreeNode.getUserObject();
+				if (nodeInfo instanceof ConstraintModel)
+				{
+					ConstraintModel cm = (ConstraintModel) nodeInfo;
+					String relationStr = pointedTreeNode.getParent().toString();
+					_graphPanel.applyConstraintsAndAddSus(cm.getConstraints(), relationStr, false);
+				}
+			}
 		}
 	}
 

@@ -491,8 +491,10 @@ public class DiagnosisGraphPanel extends JPanel
 		return res;
 	}
 	// actions for applying constraints
-	public void applyConstraints(String constraintsStr, String relationStr)
+	public void applyConstraintsAndAddSus(String constraintsStr, String relationStr, boolean add)
 	{
+		int susInterval = (add)? 1: -1;
+		
 		if (constraintsStr==null || constraintsStr.equals(""))
 		{
 			return ;
@@ -523,12 +525,14 @@ public class DiagnosisGraphPanel extends JPanel
 				tokenIDs.add(id);
 				
 				ProvenanceTableRow tableRow = tableModel.getTableRowAt(i);
-				tableRow.setSus(tableRow.getSus()+1);
+				int susTmp = tableRow.getSus()+susInterval;
+				susTmp = (susTmp>=0)? susTmp: 0;
+				tableRow.setSus(susTmp);
 			}
 		}
 		
 		// DEPENDENCY CALCULATING
-		calculateDependency(tokenIDs);
+		calculateDependencyAndAddSus(tokenIDs, add);
 		
 		normalizeTokenSusValues();
 		repaintAllProvenanceTables();
@@ -578,7 +582,7 @@ public class DiagnosisGraphPanel extends JPanel
 				pTablePane.getTablePane().clearSelection();
 				
 				// DEPENDENCY CALCULATING
-				calculateDependency(tokenIDs);
+				calculateDependencyAndAddSus(tokenIDs, true);
 				
 				normalizeTokenSusValues();
 				repaintAllProvenanceTables();
@@ -672,8 +676,10 @@ public class DiagnosisGraphPanel extends JPanel
 		return pTablePane;
 	}
 	
-	public void calculateDependency(LinkedList<Integer> tokenIDs)
+	public void calculateDependencyAndAddSus(LinkedList<Integer> tokenIDs, boolean add)
 	{
+		int susInterval = (add)? 1: -1;
+		
 		if (tokenIDs==null)
 			return ;
 		
@@ -718,7 +724,9 @@ public class DiagnosisGraphPanel extends JPanel
 					{
 						int row = pTablePanes.get(i).getTablePane().convertRowIndexToModel(k);
 						ProvenanceTableRow tableRow = tableModel.getTableRowAt(row);
-						tableRow.setSus(tableRow.getSus()+1);
+						int susTmp = tableRow.getSus()+susInterval;
+						susTmp = (susTmp>=0)? susTmp: 0;
+						tableRow.setSus(susTmp);
 					}
 				}
 			}
@@ -727,7 +735,7 @@ public class DiagnosisGraphPanel extends JPanel
 			// recursing dependency for each table pane
 			if (localTokenIDs != null)
 			{
-				calculateDependency(localTokenIDs);
+				calculateDependencyAndAddSus(localTokenIDs, true);
 			}
 		}// for table panes
 	}
