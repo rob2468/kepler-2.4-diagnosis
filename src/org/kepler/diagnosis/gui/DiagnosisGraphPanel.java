@@ -52,6 +52,8 @@ import diva.graph.GraphUtilities;
 import diva.graph.JGraph;
 import diva.gui.toolbox.JCanvasPanner;
 import diva.util.java2d.ShapeUtilities;
+import ptolemy.actor.Actor;
+import ptolemy.actor.IOPort;
 import ptolemy.actor.TypedIOPort;
 import ptolemy.actor.gui.SizeAttribute;
 import ptolemy.actor.gui.Tableau;
@@ -122,7 +124,8 @@ public class DiagnosisGraphPanel extends JPanel
 	public void initDiagnosisGraphPanel()
 	{
 		// collect all ports
-		LinkedList<TypedIOPort> tmpAllPorts = new LinkedList<TypedIOPort>();
+		LinkedList<IOPort> tmpAllPorts = new LinkedList<IOPort>();
+		LinkedList<Actor> tmpAllContainers = new LinkedList<Actor>();
 		Iterator<?> nodesIter = GraphUtilities.nodeSet(_model.getRoot(), _model).iterator();
 		while (nodesIter.hasNext())
 		{
@@ -131,8 +134,17 @@ public class DiagnosisGraphPanel extends JPanel
 			{
 				tmpAllPorts.add((TypedIOPort) node);
 			}
+			else if (node instanceof Location)
+			{
+				NamedObj container = ((Location)node).getContainer();
+				if (container instanceof Actor)
+				{
+					tmpAllContainers.add((Actor) container);
+				}
+			}
 		}
 		_allPorts = tmpAllPorts;
+		_allActors = tmpAllContainers;
 		
 		// set this graph panel
 		setBorder(null);
@@ -623,7 +635,7 @@ public class DiagnosisGraphPanel extends JPanel
 			String portName1 = query.getPortNameForTokenID(tokenAndPort.getTokenID());
 			
 			// get write port
-			TypedIOPort port1 = null;
+			IOPort port1 = null;
 			for (int i=0; i<_allPorts.size(); i++)
 			{
 				String fullPortName = _allPorts.get(i).getFullName();
@@ -642,7 +654,7 @@ public class DiagnosisGraphPanel extends JPanel
 			String portName2 = query.getPortNameForPortID(tokenAndPort.getPortID());
 			
 			// get read port
-			TypedIOPort port2 = null;
+			IOPort port2 = null;
 			for (int i=0; i<_allPorts.size(); i++)
 			{
 				String fullPortName = _allPorts.get(i).getFullName();
@@ -1136,7 +1148,10 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	private int _workflowID;
 	
-	private List<TypedIOPort> _allPorts;
+	private List<IOPort> _allPorts;
+	
+	/** contain all actors */
+	private List<Actor> _allActors;
 	
 	/** _graphType indicates that this graph panel is a workflow or a workflow run */
 	public final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
