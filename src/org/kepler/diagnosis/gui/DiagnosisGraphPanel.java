@@ -129,7 +129,7 @@ public class DiagnosisGraphPanel extends JPanel
 	{
 		// collect all ports
 		LinkedList<IOPort> tmpAllPorts = new LinkedList<IOPort>();
-		LinkedList<Actor> tmpAllContainers = new LinkedList<Actor>();
+		LinkedList<SuspiciousActor> tmpAllContainers = new LinkedList<SuspiciousActor>();
 		Iterator<?> nodesIter = GraphUtilities.nodeSet(_model.getRoot(), _model).iterator();
 		while (nodesIter.hasNext())
 		{
@@ -143,7 +143,7 @@ public class DiagnosisGraphPanel extends JPanel
 				NamedObj container = ((Location)node).getContainer();
 				if (container instanceof Actor)
 				{
-					tmpAllContainers.add((Actor) container);
+					tmpAllContainers.add(new SuspiciousActor((Actor) container));
 				}
 			}
 		}
@@ -1172,7 +1172,7 @@ public class DiagnosisGraphPanel extends JPanel
 	private List<IOPort> _allPorts;
 	
 	/** contain all actors */
-	private List<Actor> _allActors;
+	private List<SuspiciousActor> _allActors;
 	
     /** List of highlight attributes we have created. */
     private List<Attribute> _actorHighlights = new LinkedList<Attribute>();
