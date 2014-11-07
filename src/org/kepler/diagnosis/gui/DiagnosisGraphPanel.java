@@ -55,14 +55,18 @@ import diva.util.java2d.ShapeUtilities;
 import ptolemy.actor.Actor;
 import ptolemy.actor.IOPort;
 import ptolemy.actor.TypedIOPort;
+import ptolemy.actor.gui.ColorAttribute;
 import ptolemy.actor.gui.SizeAttribute;
 import ptolemy.actor.gui.Tableau;
 import ptolemy.actor.gui.TableauFrame;
 import ptolemy.kernel.ComponentRelation;
 import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.Attribute;
+import ptolemy.kernel.util.ChangeRequest;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.Location;
 import ptolemy.kernel.util.NamedObj;
+import ptolemy.kernel.util.Settable;
 import ptolemy.vergil.actor.ActorEditorGraphController;
 import ptolemy.vergil.actor.ActorGraphModel;
 import ptolemy.vergil.basic.BasicGraphPane;
@@ -780,6 +784,23 @@ public class DiagnosisGraphPanel extends JPanel
 		}
 	}
 	
+	/**
+     * Return a change request that clears all the highlights.
+     * @return a change request that clears all the highlights.
+     */
+    protected ChangeRequest _getClearAllHighlightsChangeRequest() {
+        ChangeRequest request = new ChangeRequest(this,
+                "Highlight Clearer", true) {
+            protected void _execute() throws Exception {
+                for (Attribute highlight : _actorHighlights) {
+                    highlight.setContainer(null);
+                }
+            }
+        };
+        request.setPersistent(false);
+        return request;
+    }
+    
 	// set contents of the constraints of relation panel, according to this new graph panel
 	public void refreshConstraintsOfRelationPanel()
 	{
@@ -1152,6 +1173,9 @@ public class DiagnosisGraphPanel extends JPanel
 	
 	/** contain all actors */
 	private List<Actor> _allActors;
+	
+    /** List of highlight attributes we have created. */
+    private List<Attribute> _actorHighlights = new LinkedList<Attribute>();
 	
 	/** _graphType indicates that this graph panel is a workflow or a workflow run */
 	public final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
