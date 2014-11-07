@@ -1176,6 +1176,8 @@ public class DiagnosisGraphPanel extends JPanel
 	
     /** List of highlight attributes we have created. */
     private List<Attribute> _actorHighlights = new LinkedList<Attribute>();
+    
+    private List<DiagnosisRecordDAG> _orderedDRs = new LinkedList<DiagnosisRecordDAG>();
 	
 	/** _graphType indicates that this graph panel is a workflow or a workflow run */
 	public final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
