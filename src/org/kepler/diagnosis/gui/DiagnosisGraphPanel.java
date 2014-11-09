@@ -4,12 +4,14 @@ import java.awt.Adjustable;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.AdjustmentEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,19 +21,15 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
-import javax.swing.JTable;
+import javax.swing.JSlider;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-
 import org.kepler.diagnosis.DiagnosisManager;
 import org.kepler.diagnosis.constraintsofrelation.ConstraintMutableTreeNode;
 import org.kepler.diagnosis.constraintsofrelation.ConstraintTreeModel;
@@ -55,7 +53,6 @@ import diva.util.java2d.ShapeUtilities;
 import ptolemy.actor.Actor;
 import ptolemy.actor.IOPort;
 import ptolemy.actor.TypedIOPort;
-import ptolemy.actor.gui.ColorAttribute;
 import ptolemy.actor.gui.SizeAttribute;
 import ptolemy.actor.gui.Tableau;
 import ptolemy.actor.gui.TableauFrame;
@@ -66,7 +63,6 @@ import ptolemy.kernel.util.ChangeRequest;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.Location;
 import ptolemy.kernel.util.NamedObj;
-import ptolemy.kernel.util.Settable;
 import ptolemy.vergil.actor.ActorEditorGraphController;
 import ptolemy.vergil.actor.ActorGraphModel;
 import ptolemy.vergil.basic.BasicGraphPane;
@@ -154,6 +150,14 @@ public class DiagnosisGraphPanel extends JPanel
 		setBorder(null);
 		setLayout(new BorderLayout());
 		
+		// 
+		JPanel graphContainPanel = new JPanel();
+		graphContainPanel.setLayout(new BorderLayout());
+		add(graphContainPanel, BorderLayout.CENTER);
+		JPanel sliderContainPanel = new JPanel();
+		sliderContainPanel.setLayout(new BorderLayout());
+		add(sliderContainPanel, BorderLayout.EAST);
+		
 		try
 		{
 			SizeAttribute size = (SizeAttribute) ((NamedObj) _model.getRoot()).getAttribute("_vergilSize", SizeAttribute.class);
@@ -168,8 +172,8 @@ public class DiagnosisGraphPanel extends JPanel
 		_horizontalScrollBar = new JScrollBar(Adjustable.HORIZONTAL);
 		_verticalScrollBar = new JScrollBar(Adjustable.VERTICAL);
 					
-		add(_horizontalScrollBar, BorderLayout.SOUTH);
-		add(_verticalScrollBar, BorderLayout.EAST);
+		graphContainPanel.add(_horizontalScrollBar, BorderLayout.SOUTH);
+		graphContainPanel.add(_verticalScrollBar, BorderLayout.EAST);
 		
 		_horizontalScrollBar.setModel(_jgraph.getGraphPane().getCanvas().getHorizontalRangeModel());
 		_verticalScrollBar.setModel(_jgraph.getGraphPane().getCanvas().getVerticalRangeModel());
@@ -180,7 +184,24 @@ public class DiagnosisGraphPanel extends JPanel
 		_horizontalScrollBar.addAdjustmentListener(_horizontalScrollBarListener);
 		_verticalScrollBar.addAdjustmentListener(_verticalScrollBarListener);
 		
-		add(_jgraph, BorderLayout.CENTER);
+		graphContainPanel.add(_jgraph, BorderLayout.CENTER);
+		
+		// set DRs selecting slider
+		_diagSlider = new JSlider(JSlider.VERTICAL, 0, 100, 30);
+		
+		Font font = new Font("", Font.PLAIN, 12);
+		JLabel l1 = new JLabel("Less");
+		l1.setFont(font);
+		JLabel l2 = new JLabel("More");
+		l2.setFont(font);
+		_diagSlider.setPaintLabels(true);
+		Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+		labelTable.put(new Integer(0), l1);
+		labelTable.put(new Integer(100), l2);
+		_diagSlider.setLabelTable(labelTable);
+		
+		sliderContainPanel.add(new JLabel("Diagnosis Records"), BorderLayout.NORTH);
+		sliderContainPanel.add(_diagSlider, BorderLayout.CENTER);
 	}
 	
 	/** Create all table panes on the basis of _model and store in _allTablePanes */
@@ -788,7 +809,8 @@ public class DiagnosisGraphPanel extends JPanel
      * Return a change request that clears all the highlights.
      * @return a change request that clears all the highlights.
      */
-    protected ChangeRequest _getClearAllHighlightsChangeRequest() {
+    protected ChangeRequest _getClearAllHighlightsChangeRequest()
+    {
         ChangeRequest request = new ChangeRequest(this,
                 "Highlight Clearer", true) {
             protected void _execute() throws Exception {
@@ -1179,6 +1201,7 @@ public class DiagnosisGraphPanel extends JPanel
     
     private List<DiagnosisRecordDAG> _orderedDRs = new LinkedList<DiagnosisRecordDAG>();
 	
+    private JSlider _diagSlider;
 	/** _graphType indicates that this graph panel is a workflow or a workflow run */
 	public final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
 	public final static String WORKFLOW_RUN_GRAPH_TYPE = "WORKFLOW_RUN_GRAPH_TYPE";
