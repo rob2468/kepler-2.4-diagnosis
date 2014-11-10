@@ -192,7 +192,7 @@ public class DiagnosisGraphPanel extends JPanel
 		graphContainPanel.add(_jgraph, BorderLayout.CENTER);
 		
 		// set DRs selecting slider
-		_diagSlider = new JSlider(JSlider.VERTICAL, 0, 100, 0);
+		_diagSlider = new JSlider(JSlider.VERTICAL, SLIDER_MIN, SLIDER_MAX, SLIDER_INIT);
 		
 		Font font = new Font("", Font.PLAIN, 12);
 		JLabel l1 = new JLabel("Less");
@@ -210,9 +210,31 @@ public class DiagnosisGraphPanel extends JPanel
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider)e.getSource();
-			    if (!source.getValueIsAdjusting()) {
-			        int val = (int)source.getValue();
-			        System.out.println(val);
+			    if (!source.getValueIsAdjusting())
+			    {
+//			    	int oldScale = convertDRNumToSliderScale(drsNum);
+			        int currentScale = (int)source.getValue();
+			        int currentDRsNum = convertSliderScaleToDRNum(currentScale);
+			        if (currentDRsNum == drsNum) return;
+			        
+			        boolean add = (currentDRsNum>drsNum)? true: false;
+			        List<DiagnosisRecordDAG> appliedDRs = new LinkedList<DiagnosisRecordDAG>();
+			        if (add)
+			        {
+			        	for (int i=drsNum; i<currentDRsNum; i++)
+			        	{
+			        		appliedDRs.add(_orderedDRs.get(i));
+			        	}
+			        }
+			        else
+			        {
+			        	for (int i=currentDRsNum-1; i>=drsNum; i--)
+			        	{
+			        		appliedDRs.add(_orderedDRs.get(i));
+			        	}
+			        }
+			        diagnoseSWFAndAddSus(appliedDRs, add);
+			        drsNum = currentDRsNum;
 			    }
 			}
 			
@@ -593,7 +615,11 @@ public class DiagnosisGraphPanel extends JPanel
 		repaintAllProvenanceTables();
 	}
 	
-	// diagnose SWF with the supplied DRs
+	/** diagnose SWF with the supplied DRs
+	 * 
+	 * @param appliedDRs DRs that will be applied to the diagnosis
+	 * @param add If add is true, add sus values. Else, minus sus values
+	 */
 	public void diagnoseSWFAndAddSus(List<DiagnosisRecordDAG> appliedDRs, boolean add)
 	{
 		Iterator<DiagnosisRecordDAG> iterAppliedDRs = appliedDRs.iterator();
@@ -832,6 +858,17 @@ public class DiagnosisGraphPanel extends JPanel
 				calculateDependencyAndAddSus(localTokenIDs, true);
 			}
 		}// for table panes
+	}
+	
+	private int convertSliderScaleToDRNum(int sliderScale)
+	{
+		int drNum = _orderedDRs.size()*(sliderScale-SLIDER_MIN)/(SLIDER_MAX-SLIDER_MIN);
+		return drNum;
+	}
+	private int convertDRNumToSliderScale(int drNum)
+	{
+		int sliderScale = (SLIDER_MAX-SLIDER_MIN)*drNum/_orderedDRs.size() + SLIDER_MIN;
+		return sliderScale;
 	}
 	
 	private void normalizeTokenSusValues()
@@ -1308,6 +1345,10 @@ public class DiagnosisGraphPanel extends JPanel
     private int drsNum = 0;
     
     private JSlider _diagSlider;
+    private static final int SLIDER_MAX = 100;
+    private static final int SLIDER_MIN = 0;
+    private static final int SLIDER_INIT = 0;
+    
 	/** _graphType indicates that this graph panel is a workflow or a workflow run */
 	public final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
 	public final static String WORKFLOW_RUN_GRAPH_TYPE = "WORKFLOW_RUN_GRAPH_TYPE";
