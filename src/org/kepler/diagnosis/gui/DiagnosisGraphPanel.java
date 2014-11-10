@@ -11,6 +11,7 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -27,9 +28,11 @@ import javax.swing.JScrollBar;
 import javax.swing.JSlider;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumn;
+
 import org.kepler.diagnosis.DiagnosisManager;
 import org.kepler.diagnosis.constraintsofrelation.ConstraintMutableTreeNode;
 import org.kepler.diagnosis.constraintsofrelation.ConstraintTreeModel;
@@ -53,6 +56,7 @@ import diva.util.java2d.ShapeUtilities;
 import ptolemy.actor.Actor;
 import ptolemy.actor.IOPort;
 import ptolemy.actor.TypedIOPort;
+import ptolemy.actor.gui.ColorAttribute;
 import ptolemy.actor.gui.SizeAttribute;
 import ptolemy.actor.gui.Tableau;
 import ptolemy.actor.gui.TableauFrame;
@@ -63,6 +67,7 @@ import ptolemy.kernel.util.ChangeRequest;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.Location;
 import ptolemy.kernel.util.NamedObj;
+import ptolemy.kernel.util.Settable;
 import ptolemy.vergil.actor.ActorEditorGraphController;
 import ptolemy.vergil.actor.ActorGraphModel;
 import ptolemy.vergil.basic.BasicGraphPane;
@@ -187,7 +192,7 @@ public class DiagnosisGraphPanel extends JPanel
 		graphContainPanel.add(_jgraph, BorderLayout.CENTER);
 		
 		// set DRs selecting slider
-		_diagSlider = new JSlider(JSlider.VERTICAL, 0, 100, 30);
+		_diagSlider = new JSlider(JSlider.VERTICAL, 0, 100, 0);
 		
 		Font font = new Font("", Font.PLAIN, 12);
 		JLabel l1 = new JLabel("Less");
@@ -199,6 +204,19 @@ public class DiagnosisGraphPanel extends JPanel
 		labelTable.put(new Integer(0), l1);
 		labelTable.put(new Integer(100), l2);
 		_diagSlider.setLabelTable(labelTable);
+		
+		_diagSlider.addChangeListener(new javax.swing.event.ChangeListener(){
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				JSlider source = (JSlider)e.getSource();
+			    if (!source.getValueIsAdjusting()) {
+			        int val = (int)source.getValue();
+			        System.out.println(val);
+			    }
+			}
+			
+		});
 		
 		sliderContainPanel.add(new JLabel("Diagnosis Records"), BorderLayout.NORTH);
 		sliderContainPanel.add(_diagSlider, BorderLayout.CENTER);
@@ -575,6 +593,45 @@ public class DiagnosisGraphPanel extends JPanel
 		repaintAllProvenanceTables();
 	}
 	
+	// diagnose SWF with the supplied DRs
+	public void diagnoseSWFAndAddSus(List<DiagnosisRecordDAG> appliedDRs, boolean add)
+	{
+		Iterator<DiagnosisRecordDAG> iterAppliedDRs = appliedDRs.iterator();
+		// 1. iterator all DRs
+		while (iterAppliedDRs.hasNext())
+		{
+			DiagnosisRecordDAG oneDR = iterAppliedDRs.next();
+			HashSet<SuspiciousActor> actors = oneDR.getVertices();
+			Iterator<SuspiciousActor> iterActors = actors.iterator();
+			// 2. iterator all actors of one DR
+			while (iterActors.hasNext())
+			{
+				SuspiciousActor oneActor = iterActors.next();
+				// 3. iterator all actors of the objective SWF
+				for (int i=0; i<_allActors.size(); i++)
+				{
+					String fullActorName = _allActors.get(i).getActor().getFullName();
+					String entityName = fullActorName.substring(1);
+					int firstDot = entityName.indexOf('.');
+					entityName = entityName.substring(firstDot);
+					if (entityName.equals(oneActor.getActor().getFullName()))
+					{
+						SuspiciousActor objActor = _allActors.get(i);
+						int sus = oneActor.getSus();
+						sus = (add)? sus: -sus;
+						int tmpSus = objActor.getSus()+sus;
+						tmpSus = (tmpSus>0)? tmpSus: 0;
+						objActor.setSus(tmpSus);
+						break;
+					}
+				}// 3
+			}// 2
+		}// 1
+		
+		normalizeActorSusValues();
+		repaintSWF();
+	}
+	
 	// actions for selecting one row in provenance pane
 	private ListSelectionListener _listSelectionListener = new ListSelectionListener() 
 	{
@@ -789,7 +846,7 @@ public class DiagnosisGraphPanel extends JPanel
 				maxSus = tableMaxSus;
 			}
 		}
-		
+		if (maxSus == 0) return;
 		for (int i=0; i<_allTablePanes.size(); i++)
 		{
 			ProvenanceTableModel tableModel = (ProvenanceTableModel) _allTablePanes.get(i).getTablePane().getModel();
@@ -802,6 +859,52 @@ public class DiagnosisGraphPanel extends JPanel
 		for (int i=0; i<_allTablePanes.size(); i++)
 		{
 			_allTablePanes.get(i).repaint();
+		}
+	}
+	
+	private void normalizeActorSusValues()
+	{
+		int maxSus = 0;
+		for (int i=0; i<_allActors.size(); i++)
+		{
+			int tmpSus = _allActors.get(i).getSus();
+			if (tmpSus > maxSus)
+			{
+				maxSus = tmpSus;
+			}
+		}
+		if (maxSus == 0) return;
+		for (int i=0; i<_allActors.size(); i++)
+		{
+			int tmpSus = _allActors.get(i).getSus();
+			_allActors.get(i).setVal((float)tmpSus/(float)maxSus);
+		}
+	}
+	
+	private void repaintSWF()
+	{
+		Iterator<SuspiciousActor> allActorsIter = _allActors.iterator();
+		while (allActorsIter.hasNext())
+		{
+			SuspiciousActor oneActor = allActorsIter.next();
+			ChangeRequest request = new ChangeRequest(this, "Highlighter")
+			{
+				protected void _execute() throws Exception
+				{
+					Attribute highlightColor = ((NamedObj) oneActor.getActor()).getAttribute("_highlightColor");
+					if (highlightColor == null)
+					{
+						highlightColor = new ColorAttribute((NamedObj) oneActor.getActor(), "_highlightColor");
+						_actorHighlights.add(highlightColor);
+					}
+					String expreStr = "{1.0, 0.0, 0.0, "+Float.toString(oneActor.getVal())+"}";
+					((ColorAttribute) highlightColor).setExpression(expreStr);
+					highlightColor.setPersistent(false);
+					((ColorAttribute) highlightColor).setVisibility(Settable.EXPERT);
+				}
+			};
+			request.setPersistent(false);
+			((NamedObj) oneActor.getActor()).requestChange(request);
 		}
 	}
 	
@@ -1199,8 +1302,11 @@ public class DiagnosisGraphPanel extends JPanel
     /** List of highlight attributes we have created. */
     private List<Attribute> _actorHighlights = new LinkedList<Attribute>();
     
+    /** List of all ordered DRs */
     private List<DiagnosisRecordDAG> _orderedDRs = new LinkedList<DiagnosisRecordDAG>();
-	
+	/** the number of DRs applied to the diagnosis of SWF */
+    private int drsNum = 0;
+    
     private JSlider _diagSlider;
 	/** _graphType indicates that this graph panel is a workflow or a workflow run */
 	public final static String WORKFLOW_GRAPH_TYPE = "WORKFLOW_GRAPH_TYPE";
