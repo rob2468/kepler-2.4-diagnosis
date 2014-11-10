@@ -627,12 +627,12 @@ public class DiagnosisGraphPanel extends JPanel
 		while (iterAppliedDRs.hasNext())
 		{
 			DiagnosisRecordDAG oneDR = iterAppliedDRs.next();
-			HashSet<SuspiciousActor> actors = oneDR.getVertices();
-			Iterator<SuspiciousActor> iterActors = actors.iterator();
+			HashSet<SuspiciousDRActor> actors = oneDR.getVertices();
+			Iterator<SuspiciousDRActor> iterActors = actors.iterator();
 			// 2. iterator all actors of one DR
 			while (iterActors.hasNext())
 			{
-				SuspiciousActor oneActor = iterActors.next();
+				SuspiciousDRActor oneActor = iterActors.next();
 				// 3. iterator all actors of the objective SWF
 				for (int i=0; i<_allActors.size(); i++)
 				{
@@ -640,7 +640,7 @@ public class DiagnosisGraphPanel extends JPanel
 					String entityName = fullActorName.substring(1);
 					int firstDot = entityName.indexOf('.');
 					entityName = entityName.substring(firstDot);
-					if (entityName.equals(oneActor.getActor().getFullName()))
+					if (entityName.equals(oneActor.getName()))
 					{
 						SuspiciousActor objActor = _allActors.get(i);
 						int sus = oneActor.getSus();

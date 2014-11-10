@@ -24,7 +24,7 @@ public class ScientificWorkflowDAG {
 		this._edges = _edges;
 	}
 
-	protected HashSet<SuspiciousActor> _vertices;
-	protected HashSet<Vector<SuspiciousActor>> _edges;
+	private HashSet<SuspiciousActor> _vertices = new HashSet<SuspiciousActor>();
+	private HashSet<Vector<SuspiciousActor>> _edges = new HashSet<Vector<SuspiciousActor>>();
 	
 }
