@@ -191,20 +191,9 @@ public class DiagnosisGraphPanel extends JPanel
 		
 		graphContainPanel.add(_jgraph, BorderLayout.CENTER);
 		
+		sliderContainPanel.add(new JLabel("Diagnosis Records"), BorderLayout.NORTH);
 		// set DRs selecting slider
-		_diagSlider = new JSlider(JSlider.VERTICAL, SLIDER_MIN, SLIDER_MAX, SLIDER_INIT);
-		
-		Font font = new Font("", Font.PLAIN, 12);
-		JLabel l1 = new JLabel("Less");
-		l1.setFont(font);
-		JLabel l2 = new JLabel("More");
-		l2.setFont(font);
-		_diagSlider.setPaintLabels(true);
-		Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
-		labelTable.put(new Integer(0), l1);
-		labelTable.put(new Integer(100), l2);
-		_diagSlider.setLabelTable(labelTable);
-		
+		_diagSlider = new JSlider(JSlider.VERTICAL, 0, _orderedDRs.size(), 0);
 		_diagSlider.addChangeListener(new javax.swing.event.ChangeListener(){
 
 			@Override
@@ -212,9 +201,7 @@ public class DiagnosisGraphPanel extends JPanel
 				JSlider source = (JSlider)e.getSource();
 			    if (!source.getValueIsAdjusting())
 			    {
-//			    	int oldScale = convertDRNumToSliderScale(drsNum);
-			        int currentScale = (int)source.getValue();
-			        int currentDRsNum = convertSliderScaleToDRNum(currentScale);
+			        int currentDRsNum = (int)source.getValue();
 			        if (currentDRsNum == drsNum) return;
 			        
 			        boolean add = (currentDRsNum>drsNum)? true: false;
@@ -228,7 +215,7 @@ public class DiagnosisGraphPanel extends JPanel
 			        }
 			        else
 			        {
-			        	for (int i=currentDRsNum-1; i>=drsNum; i--)
+			        	for (int i=drsNum-1; i>currentDRsNum-1; i--)
 			        	{
 			        		appliedDRs.add(_orderedDRs.get(i));
 			        	}
@@ -240,7 +227,52 @@ public class DiagnosisGraphPanel extends JPanel
 			
 		});
 		
-		sliderContainPanel.add(new JLabel("Diagnosis Records"), BorderLayout.NORTH);
+		// test data
+		DiagnosisRecordDAG dr1 = new DiagnosisRecordDAG();
+		SuspiciousDRActor sDRActor1 = new SuspiciousDRActor(".Add or Subtract", 10);
+		dr1.getVertices().add(sDRActor1);
+		
+		DiagnosisRecordDAG dr2 = new DiagnosisRecordDAG();
+		SuspiciousDRActor sDRActor21 = new SuspiciousDRActor(".Constant2", 8);
+		SuspiciousDRActor sDRActor22 = new SuspiciousDRActor(".Add or Subtract", 11);
+		dr2.getVertices().add(sDRActor21);
+		dr2.getVertices().add(sDRActor22);
+		
+		DiagnosisRecordDAG dr3 = new DiagnosisRecordDAG();
+		SuspiciousDRActor sDRActor31 = new SuspiciousDRActor(".Constant2", 8);
+		SuspiciousDRActor sDRActor32 = new SuspiciousDRActor(".Add or Subtract", 8);
+		SuspiciousDRActor sDRActor33 = new SuspiciousDRActor(".Display", 6);
+		dr3.getVertices().add(sDRActor31);
+		dr3.getVertices().add(sDRActor32);
+		dr3.getVertices().add(sDRActor33);
+		
+		DiagnosisRecordDAG dr4 = new DiagnosisRecordDAG();
+		SuspiciousDRActor sDRActor41 = new SuspiciousDRActor(".Constant", 7);
+		dr4.getVertices().add(sDRActor41);
+		
+		_orderedDRs.add(dr1);
+		_orderedDRs.add(dr2);
+		_orderedDRs.add(dr3);
+		_orderedDRs.add(dr4);
+		
+		_diagSlider.setMaximum(_orderedDRs.size());
+		if (_diagSlider.getMaximum() == 0)
+		{
+			_diagSlider.setEnabled(false);
+		}
+		else
+		{
+			Font font = new Font("", Font.PLAIN, 12);
+			JLabel l1 = new JLabel("Less");
+			l1.setFont(font);
+			JLabel l2 = new JLabel("More");
+			l2.setFont(font);
+			_diagSlider.setPaintLabels(true);
+			Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+			labelTable.put(new Integer(0), l1);
+			labelTable.put(new Integer(_diagSlider.getMaximum()), l2);
+			_diagSlider.setLabelTable(labelTable);
+		}
 		sliderContainPanel.add(_diagSlider, BorderLayout.CENTER);
 	}
 	
@@ -859,7 +891,7 @@ public class DiagnosisGraphPanel extends JPanel
 			}
 		}// for table panes
 	}
-	
+	/*
 	private int convertSliderScaleToDRNum(int sliderScale)
 	{
 		int drNum = _orderedDRs.size()*(sliderScale-SLIDER_MIN)/(SLIDER_MAX-SLIDER_MIN);
@@ -870,7 +902,7 @@ public class DiagnosisGraphPanel extends JPanel
 		int sliderScale = (SLIDER_MAX-SLIDER_MIN)*drNum/_orderedDRs.size() + SLIDER_MIN;
 		return sliderScale;
 	}
-	
+	*/
 	private void normalizeTokenSusValues()
 	{
 		int maxSus = 0;
@@ -883,7 +915,7 @@ public class DiagnosisGraphPanel extends JPanel
 				maxSus = tableMaxSus;
 			}
 		}
-		if (maxSus == 0) return;
+		
 		for (int i=0; i<_allTablePanes.size(); i++)
 		{
 			ProvenanceTableModel tableModel = (ProvenanceTableModel) _allTablePanes.get(i).getTablePane().getModel();
@@ -910,11 +942,13 @@ public class DiagnosisGraphPanel extends JPanel
 				maxSus = tmpSus;
 			}
 		}
-		if (maxSus == 0) return;
 		for (int i=0; i<_allActors.size(); i++)
 		{
 			int tmpSus = _allActors.get(i).getSus();
-			_allActors.get(i).setVal((float)tmpSus/(float)maxSus);
+			if (maxSus == 0)
+				_allActors.get(i).setVal(0.0f);
+			else
+				_allActors.get(i).setVal((float)tmpSus/(float)maxSus);
 		}
 	}
 	

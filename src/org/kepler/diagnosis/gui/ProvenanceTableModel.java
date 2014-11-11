@@ -52,7 +52,10 @@ public class ProvenanceTableModel extends DefaultTableModel
 	{
 		for (int i=0; i<data.size(); i++)
 		{
-			data.get(i).setVal((float)data.get(i).getSus()/(float)maxSus);
+			if (maxSus == 0)
+				data.get(i).setVal(0.0f);
+			else
+				data.get(i).setVal((float)data.get(i).getSus()/(float)maxSus);
 		}
 	}
 
